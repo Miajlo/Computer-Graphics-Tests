@@ -34,7 +34,12 @@ END_MESSAGE_MAP()
 CRGKolokvijum2019View::CRGKolokvijum2019View() noexcept
 {
 	// TODO: add construction code here
-
+	arm1.Load(_T("res\\arm1.png"));
+	arm2.Load(_T("res\\arm2.png"));
+	leg1.Load(_T("res\\leg1.png"));
+	leg2.Load(_T("res\\leg2.png"));
+	body1.Load(_T("res\\body1.png"));
+	background.Load(_T("res\\background.jpg"));
 }
 
 CRGKolokvijum2019View::~CRGKolokvijum2019View()
@@ -51,14 +56,20 @@ BOOL CRGKolokvijum2019View::PreCreateWindow(CREATESTRUCT& cs)
 
 // CRGKolokvijum2019View drawing
 
-void CRGKolokvijum2019View::OnDraw(CDC* /*pDC*/)
+void CRGKolokvijum2019View::OnDraw(CDC* pDC)
 {
 	CRGKolokvijum2019Doc* pDoc = GetDocument();
 	ASSERT_VALID(pDoc);
 	if (!pDoc)
 		return;
 
-	// TODO: add draw code for native data here
+
+	CRect bg;
+	GetClientRect(&bg);
+
+	DrawBackground(pDC, bg);
+
+
 }
 
 
@@ -103,3 +114,68 @@ CRGKolokvijum2019Doc* CRGKolokvijum2019View::GetDocument() const // non-debug ve
 
 
 // CRGKolokvijum2019View message handlers
+
+void CRGKolokvijum2019View::DrawBackground(CDC* pDC, CRect& rect) {
+
+	background.Draw(pDC, rect, rect);
+
+}
+
+void CRGKolokvijum2019View::DrawTransparentImage(CDC* pDC, DImage* img) {
+}
+
+void CRGKolokvijum2019View::Translate(CDC* pDC, float dx, float dy, bool right_mult) {
+	m_trans.eM11 = 1;
+	m_trans.eM12 = 0;
+	m_trans.eM21 = 0;
+	m_trans.eM22 = 1;
+	
+	m_trans.eDx = dx;
+	m_trans.eDy = dy;
+
+	pDC->ModifyWorldTransform(&m_trans, right_mult ? MWT_RIGHTMULTIPLY : MWT_LEFTMULTIPLY);
+}
+
+void CRGKolokvijum2019View::Rotate(CDC* pDC, float angle, bool right_mult) {
+	auto rad_angle = angle * TO_RAD;
+
+	auto cosin = std::cos(rad_angle);
+	auto sinus = std::sin(rad_angle);
+	m_trans.eM11 = cosin;
+	m_trans.eM12 = -sinus;
+	m_trans.eM21 = cosin;
+	m_trans.eM22 = sinus;
+
+	m_trans.eDx = 0;
+	m_trans.eDy = 0;
+
+	pDC->ModifyWorldTransform(&m_trans, right_mult ? MWT_RIGHTMULTIPLY : MWT_LEFTMULTIPLY);
+}
+
+void CRGKolokvijum2019View::Scale(CDC* pDC, float sx, float sy, bool right_mult) {
+	m_trans.eM11 = sx;
+	m_trans.eM12 = 0;
+	m_trans.eM21 = 0;
+	m_trans.eM22 = sy;
+
+	m_trans.eDx = 0;
+	m_trans.eDy = 0;
+
+	pDC->ModifyWorldTransform(&m_trans, right_mult ? MWT_RIGHTMULTIPLY : MWT_LEFTMULTIPLY);
+}
+
+void CRGKolokvijum2019View::DrawArm1(CDC* pDC) {
+
+}
+
+void CRGKolokvijum2019View::DrawArm2(CDC* pDC)
+{
+}
+
+void CRGKolokvijum2019View::DrawBody1(CDC* pDC)
+{
+}
+
+void CRGKolokvijum2019View::DrawTransformers(CDC* pDC)
+{
+}
