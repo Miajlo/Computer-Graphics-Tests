@@ -22,6 +22,7 @@ public:
 	DImage arm1, arm2, leg1, leg2, body1, background;
 	const float TO_RAD = M_PI / 180;
 	const float TO_DEG = 180 / M_PI;
+	float right_mult = false;
 // Operations
 public:
 	void DrawBackground(CDC* pdC, CRect &rect);
@@ -31,6 +32,8 @@ public:
 	void Scale(CDC* pDC, float sx, float sy, bool right_mult);
 	void DrawArm1(CDC* pDC);
 	void DrawArm2(CDC* pDC);
+	void DrawLeg1(CDC* pDC);
+	void DrawLeg2(CDC* pDC);
 	void DrawBody1(CDC* pDC);
 	void DrawTransformers(CDC* pDC);
 // Overrides

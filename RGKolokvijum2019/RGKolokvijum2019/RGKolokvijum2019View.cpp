@@ -69,6 +69,14 @@ void CRGKolokvijum2019View::OnDraw(CDC* pDC)
 
 	DrawBackground(pDC, bg);
 
+	XFORM old_trans;
+	pDC->GetWorldTransform(&old_trans);
+	int old_mode = pDC->SetGraphicsMode(GM_ADVANCED);
+
+	DrawTransformers(pDC);
+
+	pDC->SetWorldTransform(&old_trans);
+	pDC->SetGraphicsMode(old_mode);
 
 }
 
@@ -122,6 +130,32 @@ void CRGKolokvijum2019View::DrawBackground(CDC* pDC, CRect& rect) {
 }
 
 void CRGKolokvijum2019View::DrawTransparentImage(CDC* pDC, DImage* img) {
+
+	CDC* memDC = new CDC();
+	if (!memDC->CreateCompatibleDC(pDC)) {
+		delete memDC;
+		return;
+	}
+
+	CBitmap* bitmap = img->GetBitmap();
+	
+	auto old_bitmap = memDC->SelectObject(bitmap);
+
+	memDC->SetStretchBltMode(HALFTONE);
+
+	memDC->SetBrushOrg(0, 0);
+
+	pDC->TransparentBlt(0, 0, img->Width(), img->Height(),
+						memDC, 0, 0, img->Width(),img->Height(), memDC->GetPixel(0,0));
+
+	memDC->SelectObject(old_bitmap);
+
+	old_bitmap = bitmap = nullptr;
+
+	delete memDC;
+	memDC = nullptr;
+
+
 }
 
 void CRGKolokvijum2019View::Translate(CDC* pDC, float dx, float dy, bool right_mult) {
@@ -166,16 +200,50 @@ void CRGKolokvijum2019View::Scale(CDC* pDC, float sx, float sy, bool right_mult)
 
 void CRGKolokvijum2019View::DrawArm1(CDC* pDC) {
 
+
+	DrawTransparentImage(pDC, &arm1);
 }
 
-void CRGKolokvijum2019View::DrawArm2(CDC* pDC)
-{
+void CRGKolokvijum2019View::DrawArm2(CDC* pDC) {
+	DrawTransparentImage(pDC, &arm2);
 }
 
-void CRGKolokvijum2019View::DrawBody1(CDC* pDC)
-{
+void CRGKolokvijum2019View::DrawLeg1(CDC* pDC) {
+	DrawTransparentImage(pDC, &leg1);
 }
 
-void CRGKolokvijum2019View::DrawTransformers(CDC* pDC)
-{
+void CRGKolokvijum2019View::DrawLeg2(CDC* pDC) {
+	DrawTransparentImage(pDC, &leg2);
+}
+
+void CRGKolokvijum2019View::DrawBody1(CDC* pDC) {
+	DrawTransparentImage(pDC, &body1);
+}
+
+void CRGKolokvijum2019View::DrawTransformers(CDC* pDC) {
+	CRect bg;
+	GetClientRect(&bg);
+
+	Translate(pDC, 150, bg.Height() / 2, right_mult);
+
+
+	/*DrawBody1(pDC);
+	DrawArm1(pDC);*/
+	//DrawArm2(pDC);
+	DrawLeg1(pDC);
+	Translate(pDC, -5, leg2.Height()/3, right_mult);
+	DrawLeg2(pDC);
+	Translate(pDC, 5, -leg2.Height() / 3, right_mult);
+	Translate(pDC, 4*leg1.Width()/5, -5, right_mult);
+	DrawBody1(pDC);
+	Translate(pDC, -4 * leg1.Width() / 5, 5, right_mult);
+
+	Translate(pDC, 27 * body1.Width() / 15 - 10, body1.Height() / 3 + 10, right_mult);
+	
+	DrawArm2(pDC);
+
+	Translate(pDC, -27 * body1.Width() / 15 + 10, -body1.Height() / 3 - 10, right_mult);
+
+	Translate(pDC, 6 * body1.Width() / 5, body1.Height() / 5, right_mult);
+	DrawArm1(pDC);
 }
