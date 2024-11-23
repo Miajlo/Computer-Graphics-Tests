@@ -18,11 +18,14 @@ protected: // create from serialization only
 public:
 	CRGKolokvijum2019Doc* GetDocument() const;
 	XFORM m_trans;
-	float curr_rot_angle;
+	float curr_rot_angle = 0;
 	DImage arm1, arm2, leg1, leg2, body1, background;
 	const float TO_RAD = M_PI / 180;
 	const float TO_DEG = 180 / M_PI;
 	float right_mult = false;
+	float body1_rot_angle = 0;
+	float arm2_rot_angle = 0;
+	float arms_rot_angle = 0;
 // Operations
 public:
 	void DrawBackground(CDC* pdC, CRect &rect);
@@ -58,6 +61,8 @@ protected:
 // Generated message map functions
 protected:
 	DECLARE_MESSAGE_MAP()
+public:
+	afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
 };
 
 #ifndef _DEBUG  // debug version in RGKolokvijum2019View.cpp

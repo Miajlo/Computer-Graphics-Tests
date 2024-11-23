@@ -27,6 +27,7 @@ BEGIN_MESSAGE_MAP(CRGKolokvijum2019View, CView)
 	ON_COMMAND(ID_FILE_PRINT, &CView::OnFilePrint)
 	ON_COMMAND(ID_FILE_PRINT_DIRECT, &CView::OnFilePrint)
 	ON_COMMAND(ID_FILE_PRINT_PREVIEW, &CView::OnFilePrintPreview)
+	ON_WM_KEYDOWN()
 END_MESSAGE_MAP()
 
 // CRGKolokvijum2019View construction/destruction
@@ -177,8 +178,8 @@ void CRGKolokvijum2019View::Rotate(CDC* pDC, float angle, bool right_mult) {
 	auto sinus = std::sin(rad_angle);
 	m_trans.eM11 = cosin;
 	m_trans.eM12 = -sinus;
-	m_trans.eM21 = cosin;
-	m_trans.eM22 = sinus;
+	m_trans.eM21 = sinus;
+	m_trans.eM22 = cosin;
 
 	m_trans.eDx = 0;
 	m_trans.eDy = 0;
@@ -199,51 +200,129 @@ void CRGKolokvijum2019View::Scale(CDC* pDC, float sx, float sy, bool right_mult)
 }
 
 void CRGKolokvijum2019View::DrawArm1(CDC* pDC) {
-
-
+	//Rotate(pDC, arms_rot_angle, right_mult);
+	Translate(pDC, -34, -31, right_mult);
 	DrawTransparentImage(pDC, &arm1);
+	Translate(pDC, 34, 31, right_mult);
 }
 
 void CRGKolokvijum2019View::DrawArm2(CDC* pDC) {
+	
+	
+	XFORM old;
+	pDC->GetWorldTransform(&old);
+	Rotate(pDC, body1_rot_angle, right_mult);
+	Translate(pDC, 176, 71, right_mult);
+	Rotate(pDC, 180 + arm2_rot_angle, right_mult);
+	Translate(pDC, -23, -61, right_mult);
 	DrawTransparentImage(pDC, &arm2);
+	pDC->SetWorldTransform(&old);
+	
+	
 }
 
 void CRGKolokvijum2019View::DrawLeg1(CDC* pDC) {
+	Rotate(pDC, curr_rot_angle, right_mult);
+	Translate(pDC, -30, -125, right_mult);
 	DrawTransparentImage(pDC, &leg1);
+	Translate(pDC, 30, 125, right_mult);
+	//Rotate(pDC, -curr_rot_angle, right_mult);
+	
 }
 
 void CRGKolokvijum2019View::DrawLeg2(CDC* pDC) {
+	Rotate(pDC, -curr_rot_angle, right_mult);
+	Translate(pDC, -35, -60, right_mult);
+	
 	DrawTransparentImage(pDC, &leg2);
+		
+	Translate(pDC, 35, 60, right_mult);
+	Rotate(pDC, curr_rot_angle, right_mult);
+
+	
 }
 
 void CRGKolokvijum2019View::DrawBody1(CDC* pDC) {
+	
+	Translate(pDC, arm1.Width() - 30, 3, right_mult);
+	Rotate(pDC, body1_rot_angle, right_mult);
+	Translate(pDC, -26, -133, right_mult);
+	
+	
 	DrawTransparentImage(pDC, &body1);
+	
+
+
+	Rotate(pDC, -body1_rot_angle, right_mult);
+	Translate(pDC, 26, 133, right_mult);
+	Translate(pDC, 186, -47, right_mult);
+	
 }
 
 void CRGKolokvijum2019View::DrawTransformers(CDC* pDC) {
 	CRect bg;
 	GetClientRect(&bg);
 
-	Translate(pDC, 150, bg.Height() / 2, right_mult);
+	Translate(pDC, 250, 2 * bg.Height() / 3, right_mult);
 
 
 	/*DrawBody1(pDC);
 	DrawArm1(pDC);*/
 	//DrawArm2(pDC);
-	DrawLeg1(pDC);
-	Translate(pDC, -5, leg2.Height()/3, right_mult);
 	DrawLeg2(pDC);
-	Translate(pDC, 5, -leg2.Height() / 3, right_mult);
-	Translate(pDC, 4*leg1.Width()/5, -5, right_mult);
+	
+	DrawLeg1(pDC);
+	
 	DrawBody1(pDC);
-	Translate(pDC, -4 * leg1.Width() / 5, 5, right_mult);
-
-	Translate(pDC, 27 * body1.Width() / 15 - 10, body1.Height() / 3 + 10, right_mult);
 	
 	DrawArm2(pDC);
+	
+	//DrawArm1(pDC);
+	
+	
+	
+}
 
-	Translate(pDC, -27 * body1.Width() / 15 + 10, -body1.Height() / 3 - 10, right_mult);
 
-	Translate(pDC, 6 * body1.Width() / 5, body1.Height() / 5, right_mult);
-	DrawArm1(pDC);
+void CRGKolokvijum2019View::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
+{
+	switch (nChar) {
+
+	case VK_LEFT:
+		curr_rot_angle += ROT_STEP;
+		Invalidate();
+		break;
+	case VK_RIGHT:
+		curr_rot_angle -= ROT_STEP;
+		Invalidate();
+		break;
+	case 'W':
+		body1_rot_angle += ROT_STEP;
+		Invalidate();
+		break;
+	case 'S':
+		body1_rot_angle -= ROT_STEP;
+		Invalidate();
+		break;
+	case 'T':
+		arm2_rot_angle += ROT_STEP;
+		Invalidate();
+		break;
+	case 'G':
+		arm2_rot_angle -= ROT_STEP;
+		Invalidate();
+		break;
+	case 'Q':
+		arms_rot_angle += ROT_STEP;
+		Invalidate();
+		break;
+	case 'E':
+		arms_rot_angle -= ROT_STEP;
+		Invalidate();
+		break;
+	default:
+		break;
+	}
+
+	CView::OnKeyDown(nChar, nRepCnt, nFlags);
 }
