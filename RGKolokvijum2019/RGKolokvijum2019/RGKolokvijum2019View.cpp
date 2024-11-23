@@ -200,9 +200,17 @@ void CRGKolokvijum2019View::Scale(CDC* pDC, float sx, float sy, bool right_mult)
 }
 
 void CRGKolokvijum2019View::DrawArm1(CDC* pDC) {
-	//Rotate(pDC, arms_rot_angle, right_mult);
+	
+	XFORM old;
+
+
+	//Translate(pDC, -27, -17, right_mult);
+	Rotate(pDC, arms_rot_angle, right_mult);
+	Rotate(pDC, body1_rot_angle, right_mult);
 	Translate(pDC, -34, -31, right_mult);
+	
 	DrawTransparentImage(pDC, &arm1);
+
 	Translate(pDC, 34, 31, right_mult);
 }
 
@@ -211,11 +219,15 @@ void CRGKolokvijum2019View::DrawArm2(CDC* pDC) {
 	
 	XFORM old;
 	pDC->GetWorldTransform(&old);
+	Rotate(pDC, arms_rot_angle, right_mult);
 	Rotate(pDC, body1_rot_angle, right_mult);
 	Translate(pDC, 176, 71, right_mult);
 	Rotate(pDC, 180 + arm2_rot_angle, right_mult);
 	Translate(pDC, -23, -61, right_mult);
+	
+	
 	DrawTransparentImage(pDC, &arm2);
+
 	pDC->SetWorldTransform(&old);
 	
 	
@@ -226,7 +238,7 @@ void CRGKolokvijum2019View::DrawLeg1(CDC* pDC) {
 	Translate(pDC, -30, -125, right_mult);
 	DrawTransparentImage(pDC, &leg1);
 	Translate(pDC, 30, 125, right_mult);
-	//Rotate(pDC, -curr_rot_angle, right_mult);
+	
 	
 }
 
@@ -245,17 +257,16 @@ void CRGKolokvijum2019View::DrawLeg2(CDC* pDC) {
 void CRGKolokvijum2019View::DrawBody1(CDC* pDC) {
 	
 	Translate(pDC, arm1.Width() - 30, 3, right_mult);
-	Rotate(pDC, body1_rot_angle, right_mult);
+	Rotate(pDC, arms_rot_angle, right_mult);
 	Translate(pDC, -26, -133, right_mult);
 	
 	
 	DrawTransparentImage(pDC, &body1);
 	
 
-
-	Rotate(pDC, -body1_rot_angle, right_mult);
 	Translate(pDC, 26, 133, right_mult);
-	Translate(pDC, 186, -47, right_mult);
+	//Rotate(pDC, -arms_rot_angle, right_mult);
+	Translate(pDC, 185, -50, right_mult);
 	
 }
 
@@ -277,7 +288,7 @@ void CRGKolokvijum2019View::DrawTransformers(CDC* pDC) {
 	
 	DrawArm2(pDC);
 	
-	//DrawArm1(pDC);
+	DrawArm1(pDC);
 	
 	
 	
