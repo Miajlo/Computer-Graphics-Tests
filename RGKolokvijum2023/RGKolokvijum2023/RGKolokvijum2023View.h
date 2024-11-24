@@ -39,7 +39,7 @@ public:
 	void draw_img_transparent(CDC* pDC, DImage* img);
 
 	void draw_half(CDC* pDC);
-
+	void draw_head(CDC* pDC);
 
 // Overrides
 public:

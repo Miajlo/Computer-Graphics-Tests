@@ -187,6 +187,15 @@ void CRGKolokvijum2023View::draw_half(CDC* pDC) {
 	pDC->SetWorldTransform(&old_trans);
 }
 
+void CRGKolokvijum2023View::draw_head(CDC* pDC) {
+	translate(pDC, 0, -telo.Height(), right_mult);
+	translate(pDC, -glava.Width() / 2, -5 * glava.Height() / 6, right_mult);
+
+	draw_img_transparent(pDC, &glava);
+
+	translate(pDC, glava.Width() / 2, 5 * glava.Height() / 6, right_mult);
+}
+
 
 
 
@@ -233,12 +242,7 @@ void CRGKolokvijum2023View::OnDraw(CDC* pDC)
 	pDC->SetWorldTransform(&center_trans);
 
 
-	translate(pDC, 0, -telo.Height(), right_mult);
-	translate(pDC, -glava.Width() / 2, -5 * glava.Height() / 6, right_mult);
-
-	draw_img_transparent(pDC, &glava);
-
-	translate(pDC, glava.Width() / 2, 5 * glava.Height() / 6, right_mult);
+	draw_head(pDC);
 
 	pDC->SetWorldTransform(&old_trans);
 	pDC->SetGraphicsMode(old_gm);
