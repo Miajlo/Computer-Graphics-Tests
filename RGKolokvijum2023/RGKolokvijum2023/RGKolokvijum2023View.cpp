@@ -212,15 +212,16 @@ void CRGKolokvijum2023View::OnDraw(CDC* pDC)
 
 	XFORM center_trans;
 
+	//do it here to stop multiple calls in draw_half method
 	translate(pDC, pozadina.Width() / 2, pozadina.Height() / 2, right_mult);
 	rotate(pDC, curr_rot_angle, right_mult);
 	
 	pDC->GetWorldTransform(&center_trans);
 
 
-	//drawing mirrored left side
 	draw_half(pDC);
 
+	//drawing mirrored left side
 	scale(pDC, - 1, 1, right_mult);
 
 	draw_half(pDC);
