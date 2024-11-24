@@ -20,6 +20,14 @@ public:
 	DImage telo, saka, stopalo, podkolenica, nadkolenica;
 	float curr_rot_angle = 0;
 	const float rot_step = 5;
+	
+	const float hand_max_angle = 30;
+	const float hand_min_angle = -10;
+	const float pod_max_angle = 80;
+	const float pod_min_angle = -10;
+	const float nad_max_angle = 90;
+	const float nad_min_angle = -10;
+
 	float ASagnle = 0;
 	float DFangle = 0;
 	float GHangle = 0;

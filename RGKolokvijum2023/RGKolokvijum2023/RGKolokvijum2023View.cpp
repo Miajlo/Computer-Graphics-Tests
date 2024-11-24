@@ -11,6 +11,7 @@
 #endif
 #include<corecrt_math_defines.h>
 #include<cmath>
+#include <algorithm>
 #include "RGKolokvijum2023Doc.h"
 #include "RGKolokvijum2023View.h"
 
@@ -138,22 +139,31 @@ void CRGKolokvijum2023View::draw_half(CDC* pDC) {
 	
 	translate(pDC, -telo.Width(), -telo.Height(), right_mult);
 
-	rotate(pDC, GHangle, right_mult);
 
 	draw_img_transparent(pDC, &telo);
 
+	
 	translate(pDC, -nadlaktica.Width()/6, 30, right_mult);
+	translate(pDC, 35, 35, right_mult);
+	rotate(pDC, GHangle, right_mult);
+	translate(pDC, -35, -35, right_mult);
 
 	draw_img_transparent(pDC, &nadlaktica);
 
+
 	translate(pDC, -podlaktica.Width()/6, 2 * nadlaktica.Height() / 3, right_mult);
+	translate(pDC, 30, 33, right_mult);
+	rotate(pDC, DFangle, right_mult);
+	translate(pDC, -30, -33, right_mult);
 
 	draw_img_transparent(pDC, &podlaktica);
 
-
-	translate(pDC, 5, podlaktica.Height() / 2 + saka.Height() / 2, right_mult);
-	rotate(pDC, ASagnle, right_mult);
+	translate(pDC, 30, 33, right_mult);
 	
+	translate(pDC, -saka.Width()/2, podlaktica.Height() / 2 + saka.Height() / 5, right_mult);
+	translate(pDC, 25, 3, right_mult);
+	rotate(pDC, ASagnle, right_mult);
+	translate(pDC, -25, -3, right_mult);
 
 	draw_img_transparent(pDC, &saka);
 
@@ -314,26 +324,32 @@ void CRGKolokvijum2023View::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 		break;
 	case 'A':
 		ASagnle -= rot_step;
+		ASagnle = std::max<float>(ASagnle, hand_min_angle);
 		Invalidate();
 		break;
 	case 'S':
 		ASagnle += rot_step;
+		ASagnle = std::min<float>(ASagnle, hand_max_angle);
 		Invalidate();
 		break;
 	case 'D':
 		DFangle -= rot_step;
+		DFangle = std::max<float>(DFangle, pod_min_angle);
 		Invalidate();
 		break;
 	case 'F':
 		DFangle+= rot_step;
+		DFangle = std::min<float>(DFangle, pod_max_angle);
 		Invalidate();
 		break;
 	case 'G':
 		GHangle-= rot_step;
+		GHangle = std::max<float>(GHangle, nad_min_angle);
 		Invalidate();
 		break;
 	case 'H':
 		GHangle += rot_step;
+		GHangle = std::min<float>(GHangle, nad_max_angle);
 		Invalidate();
 		break;
 	}
