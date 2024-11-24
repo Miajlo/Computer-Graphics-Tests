@@ -217,6 +217,8 @@ void CRGKolokvijum2023View::OnDraw(CDC* pDC)
 	
 	pDC->GetWorldTransform(&center_trans);
 
+
+	//drawing mirrored left side
 	draw_half(pDC);
 
 	scale(pDC, - 1, 1, right_mult);
@@ -236,26 +238,6 @@ void CRGKolokvijum2023View::OnDraw(CDC* pDC)
 	draw_img_transparent(pDC, &glava);
 
 	translate(pDC, glava.Width() / 2, 5 * glava.Height() / 6, right_mult);
-
-
-
-	/*translate(pDC, telo.Width(), telo.Height(), right_mult);
-
-	translate(pDC, telo.Width(), -telo.Height(), right_mult);
-	scale(pDC, -1, 1, right_mult);
-	
-	draw_img_transparent(pDC, &telo);
-	
-	scale(pDC, -1, 1, right_mult);
-	translate(pDC, -telo.Width(), 0, right_mult);*/
-
-
-	/*translate(pDC, -glava.Width() / 2, -5 * glava.Height() / 6, right_mult);
-
-	draw_img_transparent(pDC, &glava);
-
-	translate(pDC, glava.Width() / 2, 5 * glava.Height() / 6, right_mult);*/
-
 
 	pDC->SetWorldTransform(&old_trans);
 	pDC->SetGraphicsMode(old_gm);
