@@ -4,9 +4,9 @@
 
 #pragma once
 #include<vector>
+#include"DImage.h"
 
-class CRGKolokvijum2016View : public CView
-{
+class CRGKolokvijum2016View : public CView {
 protected: // create from serialization only
 	CRGKolokvijum2016View() noexcept;
 	DECLARE_DYNCREATE(CRGKolokvijum2016View)
@@ -14,10 +14,19 @@ protected: // create from serialization only
 // Attributes
 public:
 	CRGKolokvijum2016Doc* GetDocument() const;
-
+	DImage table, border;
+	XFORM m_trans;
+	bool right_mult = false;
 // Operations
 public:
+	void Translate(CDC* pDC, float dx, float dy, bool right_mult);
+	
 	void DrawStick(CDC* pDC, int w);
+	void DrawBorder(CDC* pDC, CRect rect, int w);
+	void DrawTable(CDC* pDC, CRect rect);
+	void DrawHoles(CDC* pDC, CRect rect, float r, int w); //w za velicinu bordera
+
+
 // Overrides
 public:
 	virtual void OnDraw(CDC* pDC);  // overridden to draw this view

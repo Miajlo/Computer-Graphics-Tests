@@ -34,6 +34,8 @@ END_MESSAGE_MAP()
 CRGKolokvijum2016View::CRGKolokvijum2016View() noexcept
 {
 	// TODO: add construction code here
+	border.Load(_T("res\\wood.jpg"));
+	table.Load(_T("res\\felt2.jpg"));
 
 }
 
@@ -51,6 +53,18 @@ BOOL CRGKolokvijum2016View::PreCreateWindow(CREATESTRUCT& cs)
 
 // CRGKolokvijum2016View drawing
 
+void CRGKolokvijum2016View::Translate(CDC* pDC, float dx, float dy, bool right_mult) {
+	m_trans.eM11 = 1;
+	m_trans.eM12 = 0;
+	m_trans.eM21 = 0;
+	m_trans.eM22 = 1;
+
+	m_trans.eDx = dx;
+	m_trans.eDy = dy;
+
+	pDC->ModifyWorldTransform(&m_trans, right_mult ? MWT_RIGHTMULTIPLY : MWT_LEFTMULTIPLY);
+}
+
 void CRGKolokvijum2016View::DrawStick(CDC* pDC, int w) {
 
 	std::vector<CPoint> stick_points = {
@@ -60,6 +74,91 @@ void CRGKolokvijum2016View::DrawStick(CDC* pDC, int w) {
 	pDC->Polygon(stick_points.data(), stick_points.size());
 }
 
+void CRGKolokvijum2016View::DrawBorder(CDC* pDC, CRect rect, int w) {
+
+	CRect imgRect(0, 0, w, w);
+	XFORM old_trans;
+	pDC->GetWorldTransform(&old_trans);
+		
+	for (int i = 0; i <= rect.Height() / w; ++i) {
+		border.Draw(pDC, imgRect, imgRect);
+
+		Translate(pDC, rect.Width() - w, 0, right_mult);
+
+		border.Draw(pDC, imgRect, imgRect);
+
+		Translate(pDC, -rect.Width() + w, w, right_mult);
+
+	}
+	pDC->SetWorldTransform(&old_trans);
+	for (int i = 0; i <= rect.Width() / w; ++i) {
+		border.Draw(pDC, imgRect, imgRect);
+		
+		Translate(pDC, 0, rect.Height() - w, right_mult);
+
+		border.Draw(pDC, imgRect, imgRect);
+
+		Translate(pDC, w, -rect.Height() + w, right_mult);
+
+	}
+
+	pDC->SetWorldTransform(&old_trans);
+	//Translate(pDC, w, w, right_mult);
+}
+
+void CRGKolokvijum2016View::DrawTable(CDC* pDC, CRect rect) {
+
+	CRect imgRect(0, 0, table.Width(), table.Height());
+
+	XFORM old_trans;
+	pDC->GetWorldTransform(&old_trans);
+
+	for (int y = 0; y <= rect.Height() / table.Height()+ 1; ++y) {
+		for (int x = 0; x <= rect.Width() / table.Width() + 1; ++x) {
+
+			table.Draw(pDC, imgRect, imgRect);
+			Translate(pDC, imgRect.Width(), 0, right_mult);
+		}
+		pDC->SetWorldTransform(&old_trans);
+		Translate(pDC, 0, imgRect.Height()*y, right_mult);
+	}
+
+	pDC->SetWorldTransform(&old_trans);
+}
+
+void CRGKolokvijum2016View::DrawHoles(CDC* pDC, CRect rect, float r, int w) {
+	XFORM old_trans;
+	pDC->GetWorldTransform(&old_trans);
+	CRect elipse(-r/2,-r/2,r/2,r/2);
+	CBrush cetka(RGB(0, 0, 0));
+
+	auto old_brush = pDC->SelectObject(&cetka);
+
+	Translate(pDC, w, w, right_mult);
+	pDC->Ellipse(elipse);
+
+	Translate(pDC, (rect.Width()-2*w)/2, 0, right_mult);
+	pDC->Ellipse(elipse);
+
+	Translate(pDC, (rect.Width() - 2 * w) / 2, 0, right_mult);
+	pDC->Ellipse(elipse);
+
+	Translate(pDC, 0, rect.Height()-2*w, right_mult);
+	pDC->Ellipse(elipse);
+
+	Translate(pDC, -(rect.Width() - 2 * w) / 2, 0, right_mult);
+	pDC->Ellipse(elipse);
+
+	Translate(pDC, -(rect.Width() - 2 * w) / 2, 0, right_mult);
+	pDC->Ellipse(elipse);
+
+	
+	
+
+	pDC->SelectObject(&old_brush);
+	pDC->SetWorldTransform(&old_trans);
+}
+
 void CRGKolokvijum2016View::OnDraw(CDC* pDC)
 {
 	CRGKolokvijum2016Doc* pDoc = GetDocument();
@@ -67,9 +166,23 @@ void CRGKolokvijum2016View::OnDraw(CDC* pDC)
 	if (!pDoc)
 		return;
 
+	CRect clientRect;
+	GetClientRect(&clientRect);
+	int border_width = 40;
+	float r = 40;
+	
 
-	DrawStick(pDC, 500);
+	int old_mode = pDC->SetGraphicsMode(GM_ADVANCED);
+	XFORM old_trans;
+	pDC->GetWorldTransform(&old_trans);
 
+	DrawTable(pDC, clientRect);
+
+	DrawBorder(pDC, clientRect, border_width);
+
+	DrawHoles(pDC, clientRect, r, border_width);
+
+	pDC->SetWorldTransform(&old_trans);
 	// TODO: add draw code for native data here
 }
 
