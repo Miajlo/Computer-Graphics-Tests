@@ -28,6 +28,7 @@ BEGIN_MESSAGE_MAP(CRGKolokvijum2014View, CView)
 	ON_COMMAND(ID_FILE_PRINT_DIRECT, &CView::OnFilePrint)
 	ON_COMMAND(ID_FILE_PRINT_PREVIEW, &CView::OnFilePrintPreview)
 	ON_WM_KEYDOWN()
+	ON_WM_ERASEBKGND()
 END_MESSAGE_MAP()
 
 // CRGKolokvijum2014View construction/destruction
@@ -269,9 +270,7 @@ void CRGKolokvijum2014View::OnEndPrinting(CDC* /*pDC*/, CPrintInfo* /*pInfo*/)
 	// TODO: add cleanup after printing
 }
 
-BOOL CRGKolokvijum2014View::OnEraseBkgnd(CDC* pDC) {
-	return TRUE;
-}
+
 
 
 // CRGKolokvijum2014View diagnostics
@@ -327,4 +326,13 @@ void CRGKolokvijum2014View::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 	}
 
 	CView::OnKeyDown(nChar, nRepCnt, nFlags);
+}
+
+
+BOOL CRGKolokvijum2014View::OnEraseBkgnd(CDC* pDC)
+{
+	return TRUE;
+	//// TODO: Add your message handler code here and/or call default
+
+	//return CView::OnEraseBkgnd(pDC);
 }

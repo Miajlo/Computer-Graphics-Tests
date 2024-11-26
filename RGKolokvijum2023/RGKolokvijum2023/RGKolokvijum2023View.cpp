@@ -30,6 +30,7 @@ BEGIN_MESSAGE_MAP(CRGKolokvijum2023View, CView)
 	ON_COMMAND(ID_FILE_PRINT_DIRECT, &CView::OnFilePrint)
 	ON_COMMAND(ID_FILE_PRINT_PREVIEW, &CView::OnFilePrintPreview)
 	ON_WM_KEYDOWN()
+	ON_WM_ERASEBKGND()
 END_MESSAGE_MAP()
 
 // CRGKolokvijum2023View construction/destruction
@@ -110,6 +111,7 @@ void CRGKolokvijum2023View::scale(CDC* pDC, float sx, float sy, bool rmult) {
 }
 
 void CRGKolokvijum2023View::draw_img_transparent(CDC* pDC, DImage* img) {
+	CBitmap* bit_mp = img->GetBitmap();
 
 	CDC* memDC = new CDC();
 
@@ -117,22 +119,27 @@ void CRGKolokvijum2023View::draw_img_transparent(CDC* pDC, DImage* img) {
 		return;
 
 
-	auto bit_mp = img->GetBitmap();
 
-	memDC->SelectObject(bit_mp);
+	auto old_bmp = memDC->SelectObject(bit_mp);
+
+	auto color = memDC->GetPixel(0, 0);
+
+	pDC->SetStretchBltMode(HALFTONE);
+
+	pDC->SetBrushOrg(0, 0);
 
 	pDC->TransparentBlt(0, 0, img->Width(), img->Height(),
-		memDC, 0, 0, img->Width(), img->Height(), memDC->GetPixel(0, 0));
+		memDC, 0, 0, img->Width(), img->Height(), color);
 
+	memDC->SelectObject(old_bmp);
+
+	memDC->DeleteDC();
 	delete memDC;
 	memDC = nullptr;
 }
 
 void CRGKolokvijum2023View::draw_half(CDC* pDC) {
-
-
 	XFORM old_trans;
-
 	
 
 	pDC->GetWorldTransform(&old_trans);
@@ -196,49 +203,37 @@ void CRGKolokvijum2023View::draw_head(CDC* pDC) {
 	translate(pDC, glava.Width() / 2, 5 * glava.Height() / 6, right_mult);
 }
 
-
-
-
-
-void CRGKolokvijum2023View::OnDraw(CDC* pDC)
-{
-	CRGKolokvijum2023Doc* pDoc = GetDocument();
-	ASSERT_VALID(pDoc);
-	if (!pDoc)
-		return;
-
-
+void CRGKolokvijum2023View::draw_robot(CDC* pDC) {
 	int old_gm = pDC->SetGraphicsMode(GM_ADVANCED);
 	XFORM old_trans;
 	pDC->GetWorldTransform(&old_trans);
 
 	CRect rGlava(0, 0, glava.Width(), glava.Height());
 
-	CRect clientRect(0,0, pozadina.Width(), pozadina.Height());
-	
-	
-	pozadina.Draw(pDC, clientRect, clientRect);
+	CRect pozadinaRect(0, 0, pozadina.Width(), pozadina.Height());
+
+
+	pozadina.Draw(pDC, pozadinaRect, pozadinaRect);
 
 	XFORM center_trans;
 
 	//do it here to stop multiple calls in draw_half method
 	translate(pDC, pozadina.Width() / 2, pozadina.Height() / 2, right_mult);
 	rotate(pDC, curr_rot_angle, right_mult);
-	
+
 	pDC->GetWorldTransform(&center_trans);
 
 
 	draw_half(pDC);
 
 	//drawing mirrored left side
-	scale(pDC, - 1, 1, right_mult);
+	scale(pDC, -1, 1, right_mult);
 
 	draw_half(pDC);
 
 	scale(pDC, -1, 1, right_mult);
 
 
-	rotate(pDC, -curr_rot_angle, right_mult);
 	pDC->SetWorldTransform(&center_trans);
 
 
@@ -246,6 +241,38 @@ void CRGKolokvijum2023View::OnDraw(CDC* pDC)
 
 	pDC->SetWorldTransform(&old_trans);
 	pDC->SetGraphicsMode(old_gm);
+}
+
+
+
+
+
+void CRGKolokvijum2023View::OnDraw(CDC* pDC) {
+	CRGKolokvijum2023Doc* pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+	if (!pDoc)
+		return;
+
+	CRect rect;
+	GetClientRect(&rect);
+
+	CDC* memDC = new CDC();
+
+	if (!memDC->CreateCompatibleDC(pDC))
+		return;
+
+	CBitmap memBitmap;
+	memBitmap.CreateCompatibleBitmap(pDC, rect.Width(), rect.Height());
+	memDC->SelectObject(&memBitmap);
+
+	// Fill the memory DC with white background
+	memDC->FillSolidRect(0, 0, rect.Width(), rect.Height(), RGB(255, 255, 255));
+
+	
+	draw_robot(pDC);
+
+	//pDC->BitBlt(0, 0, rect.Width(), rect.Height(), memDC, 0, 0, SRCCOPY);
+
 	// TODO: add draw code for native data here
 }
 
@@ -266,11 +293,6 @@ void CRGKolokvijum2023View::OnBeginPrinting(CDC* /*pDC*/, CPrintInfo* /*pInfo*/)
 void CRGKolokvijum2023View::OnEndPrinting(CDC* /*pDC*/, CPrintInfo* /*pInfo*/)
 {
 	// TODO: add cleanup after printing
-}
-
-BOOL CRGKolokvijum2023View::OnEraseBkgnd(CDC* pDC)
-{
-	return TRUE;
 }
 
 
@@ -339,7 +361,15 @@ void CRGKolokvijum2023View::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 		GHangle = std::min<float>(GHangle, nad_max_angle);
 		Invalidate();
 		break;
+	default:
+		break;
 	}
 
 	CView::OnKeyDown(nChar, nRepCnt, nFlags);
+}
+
+
+BOOL CRGKolokvijum2023View::OnEraseBkgnd(CDC* pDC)
+{
+	return TRUE;
 }

@@ -40,6 +40,7 @@ public:
 
 	void draw_half(CDC* pDC);
 	void draw_head(CDC* pDC);
+	void draw_robot(CDC* pDC);
 
 // Overrides
 public:
@@ -49,7 +50,7 @@ protected:
 	virtual BOOL OnPreparePrinting(CPrintInfo* pInfo);
 	virtual void OnBeginPrinting(CDC* pDC, CPrintInfo* pInfo);
 	virtual void OnEndPrinting(CDC* pDC, CPrintInfo* pInfo);
-	virtual BOOL OnEraseBkgnd(CDC *pDC);
+	
 // Implementation
 public:
 	virtual ~CRGKolokvijum2023View();
@@ -65,6 +66,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
+	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 };
 
 #ifndef _DEBUG  // debug version in RGKolokvijum2023View.cpp
