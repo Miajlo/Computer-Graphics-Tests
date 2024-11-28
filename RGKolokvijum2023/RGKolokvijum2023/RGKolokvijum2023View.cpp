@@ -18,6 +18,7 @@
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
+#include <vector>
 
 
 // CRGKolokvijum2023View
@@ -113,29 +114,42 @@ void CRGKolokvijum2023View::scale(CDC* pDC, float sx, float sy, bool rmult) {
 void CRGKolokvijum2023View::draw_img_transparent(CDC* pDC, DImage* img) {
 	CBitmap* bit_mp = img->GetBitmap();
 
+	XFORM xform, old;
+	xform.eM11 = 1.0f;  // Scaling in X direction (1 means no scaling)
+	xform.eM12 = 0.0f;  // Shearing in X direction
+	xform.eM21 = 0.0f;  // Shearing in Y direction
+	xform.eM22 = 1.0f;  // Scaling in Y direction (1 means no scaling)
+	xform.eDx = 0.0f;   // Translation in X direction
+	xform.eDy = 0.0f;
+
+	pDC->GetWorldTransform(&old);
+	pDC->SetWorldTransform(&xform);
+
 	CDC* memDC = new CDC();
 
 	if (!memDC->CreateCompatibleDC(pDC))
 		return;
 
-
-
 	auto old_bmp = memDC->SelectObject(bit_mp);
 
-	auto color = memDC->GetPixel(0, 0);
-
+	COLORREF color(RGB(232, 162, 0));
+		
 	pDC->SetStretchBltMode(HALFTONE);
 
 	pDC->SetBrushOrg(0, 0);
 
+	pDC->SetWorldTransform(&old);
+
 	pDC->TransparentBlt(0, 0, img->Width(), img->Height(),
-		memDC, 0, 0, img->Width(), img->Height(), color);
+						memDC, 0, 0, img->Width(), img->Height(), color);
 
 	memDC->SelectObject(old_bmp);
 
 	memDC->DeleteDC();
 	delete memDC;
 	memDC = nullptr;
+
+	
 }
 
 void CRGKolokvijum2023View::draw_half(CDC* pDC) {
@@ -168,6 +182,7 @@ void CRGKolokvijum2023View::draw_half(CDC* pDC) {
 	translate(pDC, 30, 33, right_mult);
 	
 	translate(pDC, -saka.Width()/2, podlaktica.Height() / 2 + saka.Height() / 5, right_mult);
+
 	translate(pDC, 25, 3, right_mult);
 	rotate(pDC, ASagnle, right_mult);
 	translate(pDC, -25, -3, right_mult);
@@ -223,13 +238,15 @@ void CRGKolokvijum2023View::draw_robot(CDC* pDC) {
 
 	pDC->GetWorldTransform(&center_trans);
 
-
 	draw_half(pDC);
 
+	pDC->SetWorldTransform(&center_trans);
 	//drawing mirrored left side
+	
 	scale(pDC, -1, 1, right_mult);
+	
 
-	draw_half(pDC);
+	//draw_half(pDC);
 
 	scale(pDC, -1, 1, right_mult);
 
@@ -253,6 +270,7 @@ void CRGKolokvijum2023View::OnDraw(CDC* pDC) {
 	if (!pDoc)
 		return;
 
+
 	CRect rect;
 	GetClientRect(&rect);
 
@@ -269,9 +287,9 @@ void CRGKolokvijum2023View::OnDraw(CDC* pDC) {
 	memDC->FillSolidRect(0, 0, rect.Width(), rect.Height(), RGB(255, 255, 255));
 
 	
-	draw_robot(pDC);
+	draw_robot(memDC);
 
-	//pDC->BitBlt(0, 0, rect.Width(), rect.Height(), memDC, 0, 0, SRCCOPY);
+	pDC->BitBlt(0, 0, rect.Width(), rect.Height(), memDC, 0, 0, SRCCOPY);
 
 	// TODO: add draw code for native data here
 }

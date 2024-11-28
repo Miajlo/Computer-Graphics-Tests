@@ -16,8 +16,8 @@
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
-
-
+#include<cmath>
+#include<corecrt_math_defines.h>
 // CRGKolokvijum2016View
 
 IMPLEMENT_DYNCREATE(CRGKolokvijum2016View, CView)
@@ -27,6 +27,8 @@ BEGIN_MESSAGE_MAP(CRGKolokvijum2016View, CView)
 	ON_COMMAND(ID_FILE_PRINT, &CView::OnFilePrint)
 	ON_COMMAND(ID_FILE_PRINT_DIRECT, &CView::OnFilePrint)
 	ON_COMMAND(ID_FILE_PRINT_PREVIEW, &CView::OnFilePrintPreview)
+	ON_WM_KEYDOWN()
+	ON_WM_ERASEBKGND()
 END_MESSAGE_MAP()
 
 // CRGKolokvijum2016View construction/destruction
@@ -65,13 +67,90 @@ void CRGKolokvijum2016View::Translate(CDC* pDC, float dx, float dy, bool right_m
 	pDC->ModifyWorldTransform(&m_trans, right_mult ? MWT_RIGHTMULTIPLY : MWT_LEFTMULTIPLY);
 }
 
+void CRGKolokvijum2016View::Rotate(CDC* pDC, float angle, bool right_mult) {
+	auto rad_angle = angle * M_PI / 180;
+
+	auto cosin = std::cos(rad_angle);
+	auto sinus = std::sin(rad_angle);
+	
+	m_trans.eM11 = cosin;
+	m_trans.eM12 = -sinus;
+	m_trans.eM21 = sinus;
+	m_trans.eM22 = cosin;
+
+	m_trans.eDx = 0;
+	m_trans.eDy = 0;
+
+	pDC->ModifyWorldTransform(&m_trans, right_mult ? MWT_RIGHTMULTIPLY : MWT_LEFTMULTIPLY);
+
+}
+
+void CRGKolokvijum2016View::Scale(CDC* pDC, float dx, float dy, bool right_mult) {
+	m_trans.eM11 = 1;
+	m_trans.eM12 = 0;
+	m_trans.eM21 = 0;
+	m_trans.eM22 = 1;
+
+	m_trans.eDx = dx;
+	m_trans.eDy = dy;
+
+	pDC->ModifyWorldTransform(&m_trans, right_mult ? MWT_RIGHTMULTIPLY : MWT_LEFTMULTIPLY);
+}
+
 void CRGKolokvijum2016View::DrawStick(CDC* pDC, int w) {
 
-	std::vector<CPoint> stick_points = {
-		{40,0}, { 40 + w / 100, 0}, {40 + w / 95, w}, {-w / 95 + 40, w}
+	std::vector<CPoint> stick_fhalf = {
+		{0,0}, { w / 100, 0}, {w / 98, 2 * w / 3}, {-w / 98, 2 * w / 3}
 	};
+	CPoint shalf_start = { stick_fhalf[3].x, stick_fhalf[3].y };
+	std::vector<CPoint> stick_shalf = {
+		shalf_start, 
+		{ shalf_start.x + w / 50, shalf_start.y},
+		{shalf_start.x + w / 50, shalf_start.y + w / 3},
+		{shalf_start.x, shalf_start.y + w / 3},
+	};
+	CBrush nova(RGB(255, 190, 128));
 
-	pDC->Polygon(stick_points.data(), stick_points.size());
+	int top_y = w;
+
+	CRect elipse(0, w / 50, w / 50, 0);
+
+	auto old_brush = pDC->SelectObject(&nova);
+
+	pDC->Polygon(stick_fhalf.data(), stick_fhalf.size());
+
+	pDC->SelectObject(&old_brush);
+
+	CBrush nova_upper(RGB(73, 40, 10));
+
+	XFORM old_trans;
+	pDC->GetWorldTransform(&old_trans);
+
+	pDC->SelectObject(&nova_upper);
+
+	Translate(pDC, -w / 100, w - w / 100, right_mult);
+	pDC->Ellipse(elipse);
+
+	pDC->SetWorldTransform(&old_trans);
+
+	pDC->Polygon(stick_shalf.data(), stick_shalf.size());
+	
+
+	pDC->SelectObject(&old_brush);
+
+	CPen nova_olovka(BS_SOLID, 1, RGB(255, 255, 255));
+
+	auto old_pen = pDC->SelectObject(&nova_olovka);
+
+	pDC->MoveTo(2, 0);
+
+	pDC->LineTo(2 - w / 100, w + w / 110);
+
+	pDC->MoveTo(0, 0);
+
+	pDC->SelectObject(&old_pen);
+
+
 }
 
 void CRGKolokvijum2016View::DrawBorder(CDC* pDC, CRect rect, int w) {
@@ -159,8 +238,45 @@ void CRGKolokvijum2016View::DrawHoles(CDC* pDC, CRect rect, float r, int w) {
 	pDC->SetWorldTransform(&old_trans);
 }
 
-void CRGKolokvijum2016View::OnDraw(CDC* pDC)
-{
+void CRGKolokvijum2016View::DrawBall(CDC* pDC, int r) {
+
+	CRect elipse(-r, -r, r, r);
+	CBrush nova(RGB(128, 0, 0));
+
+	auto old_brush = pDC->SelectObject(&nova);
+
+
+
+	pDC->Ellipse(elipse);
+
+	pDC->SelectObject(old_brush);
+
+}
+
+void CRGKolokvijum2016View::StickBallMove(bool dir) {
+
+	if (toggle_move && stick_y_offset - 4 <= -33) //fix hardcode later 
+		toggle_move = !toggle_move;
+	
+	else if (!toggle_move && ball_y_offset == 0)
+		toggle_move = !toggle_move;
+
+	if (!toggle_move && !dir)
+		ball_y_offset = 0;
+
+	if (!toggle_move && dir)
+		ball_y_offset -= y_mov;
+
+	if (toggle_move && dir)
+		stick_y_offset -= y_mov;
+
+	if (toggle_move && !dir)
+		stick_y_offset += y_mov;
+
+
+}
+
+void CRGKolokvijum2016View::OnDraw(CDC* pDC) {
 	CRGKolokvijum2016Doc* pDoc = GetDocument();
 	ASSERT_VALID(pDoc);
 	if (!pDoc)
@@ -168,7 +284,7 @@ void CRGKolokvijum2016View::OnDraw(CDC* pDC)
 
 	CRect clientRect;
 	GetClientRect(&clientRect);
-	int border_width = 40;
+	int border_width = 40, ball_r = 10;
 	float r = 40;
 	
 
@@ -181,6 +297,21 @@ void CRGKolokvijum2016View::OnDraw(CDC* pDC)
 	DrawBorder(pDC, clientRect, border_width);
 
 	DrawHoles(pDC, clientRect, r, border_width);
+
+	Translate(pDC, clientRect.Width() / 2, clientRect.Height() / 2, right_mult);
+	Rotate(pDC, stick_angle, right_mult);
+	
+	Translate(pDC, 0, stick_y_offset + 4 * ball_r, right_mult);
+
+	DrawStick(pDC, clientRect.Width() / 2);
+
+
+	Translate(pDC, 0, -stick_y_offset - 4 * ball_r, right_mult);
+	
+	Translate(pDC, clientRect.Width() / 400, ball_y_offset, right_mult);
+
+	DrawBall(pDC, ball_r);
+
 
 	pDC->SetWorldTransform(&old_trans);
 	// TODO: add draw code for native data here
@@ -228,3 +359,40 @@ CRGKolokvijum2016Doc* CRGKolokvijum2016View::GetDocument() const // non-debug ve
 
 
 // CRGKolokvijum2016View message handlers
+
+
+void CRGKolokvijum2016View::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
+{
+	switch (nChar) {
+	case VK_LEFT:
+		stick_angle += rot_step;
+		Invalidate();
+		break;
+
+	case VK_RIGHT:
+		stick_angle -= rot_step;
+		Invalidate();
+		break;
+	case VK_UP:
+		StickBallMove(true);
+		Invalidate();
+		break;
+	case VK_DOWN:
+		StickBallMove(false);
+		Invalidate();
+		break;
+	default:
+		break;
+	}
+
+	CView::OnKeyDown(nChar, nRepCnt, nFlags);
+}
+
+
+BOOL CRGKolokvijum2016View::OnEraseBkgnd(CDC* pDC)
+{
+	return TRUE;
+	//// TODO: Add your message handler code here and/or call default
+
+	//return CView::OnEraseBkgnd(pDC);
+}

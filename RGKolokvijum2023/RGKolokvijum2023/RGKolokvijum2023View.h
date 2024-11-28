@@ -16,6 +16,7 @@ public:
 	CRGKolokvijum2023Doc* GetDocument() const;
 	XFORM m_trans;
 	bool right_mult;
+	bool first_draw = true;
 	DImage glava, pozadina, nadlaktica, podlaktica; 
 	DImage telo, saka, stopalo, podkolenica, nadkolenica;
 	float curr_rot_angle = 0;
