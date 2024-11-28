@@ -113,7 +113,7 @@ void CRGKolokvijum2016View::DrawStick(CDC* pDC, int w) {
 
 	int top_y = w;
 
-	CRect elipse(0, w / 50, w / 50, 0);
+	CRect elipse(0, w + w / 50, w / 50, w);
 
 	auto old_brush = pDC->SelectObject(&nova);
 
@@ -128,7 +128,7 @@ void CRGKolokvijum2016View::DrawStick(CDC* pDC, int w) {
 
 	pDC->SelectObject(&nova_upper);
 
-	Translate(pDC, -w / 100, w - w / 100, right_mult);
+	//Translate(pDC, -w / 100, w - w / 100, right_mult);
 	pDC->Ellipse(elipse);
 
 	pDC->SetWorldTransform(&old_trans);
@@ -150,7 +150,7 @@ void CRGKolokvijum2016View::DrawStick(CDC* pDC, int w) {
 
 	pDC->SelectObject(&old_pen);
 
-
+	pDC->SetWorldTransform(&old_trans);
 }
 
 void CRGKolokvijum2016View::DrawBorder(CDC* pDC, CRect rect, int w) {
@@ -255,22 +255,24 @@ void CRGKolokvijum2016View::DrawBall(CDC* pDC, int r) {
 
 void CRGKolokvijum2016View::StickBallMove(bool dir) {
 
-	if (toggle_move && stick_y_offset - 4 <= -33) //fix hardcode later 
-		toggle_move = !toggle_move;
+	if (stick_move && stick_y_offset - y_mov + 25 <= 0) //fix hardcode later 
+		stick_move = !stick_move;
 	
-	else if (!toggle_move && ball_y_offset == 0)
-		toggle_move = !toggle_move;
+	else if (!stick_move && ball_y_offset == 0) {
+		stick_move = !stick_move;
+		ball_rot_angle = stick_angle;
+	}
 
-	if (!toggle_move && !dir)
-		ball_y_offset = 0;
+	if (!stick_move && !dir)
+		ball_y_offset = 0 ;
 
-	if (!toggle_move && dir)
+	if (!stick_move && dir)
 		ball_y_offset -= y_mov;
 
-	if (toggle_move && dir)
+	if (stick_move && dir)
 		stick_y_offset -= y_mov;
 
-	if (toggle_move && !dir)
+	if (stick_move && !dir)
 		stick_y_offset += y_mov;
 
 
@@ -286,35 +288,67 @@ void CRGKolokvijum2016View::OnDraw(CDC* pDC) {
 	GetClientRect(&clientRect);
 	int border_width = 40, ball_r = 10;
 	float r = 40;
-	
+	int w = clientRect.Width(), h = clientRect.Height();
 
-	int old_mode = pDC->SetGraphicsMode(GM_ADVANCED);
+
+	CDC* memDC = new CDC();
+
+	if (!memDC->CreateCompatibleDC(pDC))
+		return;
+
+	CBitmap memBitmap;
+	memBitmap.CreateCompatibleBitmap(pDC, w, h);
+	memDC->SelectObject(&memBitmap);
+
+	// Fill the memory DC with white background
+	memDC->FillSolidRect(0, 0, w, h, RGB(255, 255, 255));
+
+
+
+
+
+	// Parameters for stick and ball positioning
+	float stick_distance = r + ball_r;  // Stick distance from ball's center
+	float ball_move_speed = 2.0f; // Ball's movement speed when hit
+
+	int old_mode = memDC->SetGraphicsMode(GM_ADVANCED);
 	XFORM old_trans;
-	pDC->GetWorldTransform(&old_trans);
+	memDC->GetWorldTransform(&old_trans);
 
-	DrawTable(pDC, clientRect);
+	// Draw table, border, and holes (background elements)
+	DrawTable(memDC, clientRect);
+	DrawBorder(memDC, clientRect, border_width);
+	DrawHoles(memDC, clientRect, r, border_width);
 
-	DrawBorder(pDC, clientRect, border_width);
 
-	DrawHoles(pDC, clientRect, r, border_width);
-
-	Translate(pDC, clientRect.Width() / 2, clientRect.Height() / 2, right_mult);
-	Rotate(pDC, stick_angle, right_mult);
+	right_mult = true;
 	
-	Translate(pDC, 0, stick_y_offset + 4 * ball_r, right_mult);
+	Translate(memDC, 0, ball_y_offset, right_mult);
+	Rotate(memDC, ball_rot_angle, right_mult);
+	Translate(memDC, w / 2 + 10, h / 2, right_mult);
 
-	DrawStick(pDC, clientRect.Width() / 2);
-
-
-	Translate(pDC, 0, -stick_y_offset - 4 * ball_r, right_mult);
+	DrawBall(memDC, ball_r);
 	
-	Translate(pDC, clientRect.Width() / 400, ball_y_offset, right_mult);
+	memDC->SetWorldTransform(&old_trans);
 
-	DrawBall(pDC, ball_r);
+	Translate(memDC, w/200, stick_y_offset + 4 * ball_r - prev_ball_y, right_mult);
+
+	Rotate(memDC, stick_angle, right_mult);
+
+	Translate(memDC, w / 2, h / 2 + prev_ball_y , right_mult);
+
+	DrawStick(memDC, w / 2);
 
 
-	pDC->SetWorldTransform(&old_trans);
-	// TODO: add draw code for native data here
+	right_mult = false;
+	memDC->SetWorldTransform(&old_trans);
+	memDC->SetGraphicsMode(old_mode);
+
+	pDC->BitBlt(0, 0, w, h, memDC, 0, 0, SRCCOPY);
+
+	memDC->DeleteDC();
+	delete memDC;
+	memDC = nullptr;
 }
 
 
@@ -366,11 +400,18 @@ void CRGKolokvijum2016View::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 	switch (nChar) {
 	case VK_LEFT:
 		stick_angle += rot_step;
+		if (stick_move)
+			ball_rot_angle = stick_angle;
+		prev_ball_y = ball_y_offset;
 		Invalidate();
 		break;
 
 	case VK_RIGHT:
 		stick_angle -= rot_step;
+		if (stick_move)
+			ball_rot_angle = stick_angle;
+
+		prev_ball_y = ball_y_offset;
 		Invalidate();
 		break;
 	case VK_UP:
@@ -396,3 +437,4 @@ BOOL CRGKolokvijum2016View::OnEraseBkgnd(CDC* pDC)
 
 	//return CView::OnEraseBkgnd(pDC);
 }
+

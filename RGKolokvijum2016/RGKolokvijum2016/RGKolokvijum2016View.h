@@ -22,7 +22,12 @@ public:
 	float stick_y_offset = 0;
 	float y_mov = 5;
 	float ball_y_offset = 0;
-	bool toggle_move = true;
+	bool stick_move = true;
+	float ball_y_off_prev = 0;
+	float ball_rot_angle = 0;
+	float prev_ball_y = 0;
+	CPoint ball_poz;
+	CPoint stick_poz;
 // Operations
 public:
 	void Translate(CDC* pDC, float dx, float dy, bool right_mult);
@@ -35,6 +40,8 @@ public:
 	void DrawHoles(CDC* pDC, CRect rect, float r, int w); //w za velicinu bordera
 	void DrawBall(CDC* pDC, int r);
 	void StickBallMove(bool dir);
+
+	
 
 // Overrides
 public:
