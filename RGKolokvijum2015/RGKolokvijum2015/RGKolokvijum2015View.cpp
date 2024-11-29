@@ -66,7 +66,7 @@ void CRGKolokvijum2015View::Rotate(CDC* pDC, float angle,  bool right_mult) {
 
 
 	m_trans.eDx = 0;
-	m_trans.eM11 = 0;
+	m_trans.eDy = 0;
 
 	pDC->ModifyWorldTransform(&m_trans, right_mult ? MWT_RIGHTMULTIPLY : MWT_LEFTMULTIPLY);
 
@@ -110,51 +110,74 @@ void CRGKolokvijum2015View::DrawGhost(CDC* pDC, CRect rect) {
 		arc_p2 = { bot_right.x + rect.Width(), bot_right.y + rect.Height() / 2 };
 
 
-	pDC->Arc(rect, arc_p2, arc_p1);
-	pDC->MoveTo(arc_p1);
-	pDC->LineTo({ arc_p1.x, arc_p1.y + rect.Height() });
-
-	pDC->MoveTo(arc_p2);
-	pDC->LineTo({ arc_p2.x, arc_p2.y + rect.Height() });
-
-	pDC->MoveTo(0, 0);
-
-
+	
 	XFORM old_trans;
 	pDC->GetWorldTransform(&old_trans);
-	CPen olovka(PS_SOLID, 2, RGB(0, 0, 0));
+	
 
+
+	//pDC->MoveTo(0, 0);
+
+
+	CPen olovka(PS_SOLID, 2, RGB(0, 0, 0));
 	auto old_pen = pDC->SelectObject(&olovka);
 
-	CRect tent(0, 0, rect.Width()/6, -rect.Height()/4);
+	// Create the bounding rectangle for the tent
+	CRect tent(0, 0, rect.Width() / 6, -rect.Height() / 4);
+
+	// Set the arc direction
+
+	// Start the path
+	pDC->BeginPath();
+
+	// Draw the first arc
+	pDC->MoveTo(arc_p2);
+	pDC->ArcTo(rect, arc_p2, arc_p1);
 	pDC->SetArcDirection(AD_CLOCKWISE);
-	Translate(pDC, rect.left-4, rect.bottom + rect.Height() / 2, right_mult);
+
+	// Draw the first line
+	pDC->LineTo({ arc_p1.x, arc_p1.y + rect.Height() });
+
+	// Translate and loop for multiple arcs
+	Translate(pDC, rect.left - 4, rect.bottom + rect.Height() / 2, right_mult);
 	for (int i = 0; i < rect.Width() / tent.Width(); ++i) {
-		
-		if (i == 0)
-			pDC->Arc(tent, { tent.right, tent.bottom - tent.Height() / 2 }, { tent.left, tent.top + 10 });
-		
+		if (i == 0) {
+			// First arc
+			pDC->ArcTo(tent, { tent.right, tent.bottom - tent.Height() / 2 }, { tent.left, tent.top + 10 });
+		}
 		else {
-			CPoint p1 = { tent.left, tent.bottom - tent.Height() / 2 +3 };
-			CPoint p2 = { tent.right, tent.bottom - tent.Height() / 2 + 3};
+			// Adjust points for the next arcs
+			CPoint p1 = { tent.left, tent.bottom - tent.Height() / 2 + 3 };
+			CPoint p2 = { tent.right, tent.bottom - tent.Height() / 2 + 3 };
 			if (i % 2 == 0) {
 				std::swap(p1, p2);
 			}
-			pDC->Arc(tent, p1, p2);
-
-
+			// Add the arc to the path
+			pDC->ArcTo(tent, p1, p2);
 		}
+
+		// Translate for the next arc
 		Translate(pDC, tent.Width(), 0, right_mult);
 	}
 
-	pDC->Arc(tent,  { tent.right - tent.Width() + 5, tent.top}, { tent.left, tent.top + tent.Height() / 2 });
+	// Add the final arc
+	pDC->Arc(tent, { tent.right - tent.Width() + 5, tent.top }, { tent.left, tent.top + tent.Height() / 2 });
 
-	Translate(pDC, -20, -20, right_mult);
+	pDC->SetWorldTransform(&old_trans);
 
+	// Draw the line to close the shape
+	pDC->MoveTo({ arc_p2.x, arc_p2.y + rect.Height() });
+	pDC->LineTo(arc_p2);
+
+	// End the path
+	pDC->EndPath();
+
+	// Set the fill color to red
 	CBrush nova(RGB(255, 0, 0));
 	auto old_bruush = pDC->SelectObject(&nova);
 
-	pDC->FloodFill(0, 0, RGB(0, 0, 0));
+	// Stroke and fill the path
+	pDC->StrokeAndFillPath();
 
 	int out_r = 12, in_r = 4;
 	CRect outer_circle(-out_r, -out_r, out_r, out_r);
@@ -213,8 +236,27 @@ void CRGKolokvijum2015View::DrawPackman(CDC* pDC, CRect rect, float angle) {
 		static_cast<int>(centerY - h * sin(-rad_angle)) // y = cy - r * sin(-angle)
 	);
 
+
+	int r = 7;
+	CRect elipse(-r, -r, r, r);
+
 	// Draw the Pac-Man using the Pie function
 	pDC->Pie(rect, p1, p2);
+
+	pDC->SetWorldTransform(&old_trans);
+
+	CBrush black(RGB(0, 0, 0));
+
+	pDC->SelectObject(&black);
+
+	rad_angle = (angle + 10) * M_PI / 180;
+	
+
+	Translate(pDC, centerX, centerY, right_mult);
+	Rotate(pDC, angle + 20, right_mult);
+	Translate(pDC, 2 * w / 3, 0, right_mult);
+
+	pDC->Ellipse(elipse);
 
 	// Restore the previous brush and transformation
 	pDC->SelectObject(pOldBrush);
@@ -250,8 +292,12 @@ void CRGKolokvijum2015View::OnDraw(CDC* pDC)
 	auto old_mode = memDC->SetGraphicsMode(GM_ADVANCED);
 	memDC->GetWorldTransform(&old_trans);
 
-	//DrawBackground(memDC, clnRect);
 
+	DrawBackground(memDC, clnRect);
+
+	Translate(memDC, 200, 200, right_mult);
+
+	
 	DrawGhost(memDC, ghostRect);
 
 	DrawPackman(memDC, packman, 30);
