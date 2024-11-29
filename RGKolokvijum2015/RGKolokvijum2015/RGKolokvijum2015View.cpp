@@ -18,7 +18,7 @@
 #endif
 #include<cmath>
 #include<corecrt_math_defines.h>
-
+#include<utility>
 // CRGKolokvijum2015View
 
 IMPLEMENT_DYNCREATE(CRGKolokvijum2015View, CView)
@@ -81,7 +81,7 @@ void CRGKolokvijum2015View::Translate(CDC* pDC, float dx, float dy, bool right_m
 
 
 	m_trans.eDx = dx;
-	m_trans.eM11 = dy;
+	m_trans.eDy = dy;
 
 	pDC->ModifyWorldTransform(&m_trans, right_mult ? MWT_RIGHTMULTIPLY : MWT_LEFTMULTIPLY);
 }
@@ -104,6 +104,124 @@ void CRGKolokvijum2015View::DrawBackground(CDC* pDC, CRect rect) {
 	blue.Draw(pDC, rect, rect);
 }
 
+void CRGKolokvijum2015View::DrawGhost(CDC* pDC, CRect rect) {
+	CPoint bot_right = rect.TopLeft();
+	CPoint arc_p1 = { bot_right.x, bot_right.y + rect.Height() / 2 },
+		arc_p2 = { bot_right.x + rect.Width(), bot_right.y + rect.Height() / 2 };
+
+
+	pDC->Arc(rect, arc_p2, arc_p1);
+	pDC->MoveTo(arc_p1);
+	pDC->LineTo({ arc_p1.x, arc_p1.y + rect.Height() });
+
+	pDC->MoveTo(arc_p2);
+	pDC->LineTo({ arc_p2.x, arc_p2.y + rect.Height() });
+
+	pDC->MoveTo(0, 0);
+
+
+	XFORM old_trans;
+	pDC->GetWorldTransform(&old_trans);
+	CPen olovka(PS_SOLID, 2, RGB(0, 0, 0));
+
+	auto old_pen = pDC->SelectObject(&olovka);
+
+	CRect tent(0, 0, rect.Width()/6, -rect.Height()/4);
+	pDC->SetArcDirection(AD_CLOCKWISE);
+	Translate(pDC, rect.left-4, rect.bottom + rect.Height() / 2, right_mult);
+	for (int i = 0; i < rect.Width() / tent.Width(); ++i) {
+		
+		if (i == 0)
+			pDC->Arc(tent, { tent.right, tent.bottom - tent.Height() / 2 }, { tent.left, tent.top + 10 });
+		
+		else {
+			CPoint p1 = { tent.left, tent.bottom - tent.Height() / 2 +3 };
+			CPoint p2 = { tent.right, tent.bottom - tent.Height() / 2 + 3};
+			if (i % 2 == 0) {
+				std::swap(p1, p2);
+			}
+			pDC->Arc(tent, p1, p2);
+
+
+		}
+		Translate(pDC, tent.Width(), 0, right_mult);
+	}
+
+	pDC->Arc(tent,  { tent.right - tent.Width() + 5, tent.top}, { tent.left, tent.top + tent.Height() / 2 });
+
+	Translate(pDC, -20, -20, right_mult);
+
+	CBrush nova(RGB(255, 0, 0));
+	auto old_bruush = pDC->SelectObject(&nova);
+
+	pDC->FloodFill(0, 0, RGB(0, 0, 0));
+
+	int out_r = 12, in_r = 4;
+	CRect outer_circle(-out_r, -out_r, out_r, out_r);
+	CRect in_circle(-in_r, -in_r, in_r, in_r);
+
+	pDC->SetWorldTransform(&old_trans);
+
+	Translate(pDC, rect.left + rect.Width() / 2, rect.top + rect.Height() / 2, right_mult);
+
+	CBrush white(RGB(255, 255, 255));
+	CBrush blue(RGB(0, 0, 255));
+
+	pDC->SelectObject(&white);
+	pDC->Ellipse(outer_circle);
+	pDC->SelectObject(&blue);
+	pDC->Ellipse(in_circle);
+
+	Translate(pDC, 30, 0, right_mult);
+
+	pDC->SelectObject(&white);
+	pDC->Ellipse(outer_circle);
+	pDC->SelectObject(&blue);
+	pDC->Ellipse(in_circle);
+
+
+	pDC->SelectObject(&old_pen);
+	pDC->SelectObject(&old_bruush);
+
+	pDC->SetWorldTransform(&old_trans);
+	pDC->SetArcDirection(AD_COUNTERCLOCKWISE);
+}
+
+void CRGKolokvijum2015View::DrawPackman(CDC* pDC, CRect rect, float angle) {
+	XFORM old_trans;
+	pDC->GetWorldTransform(&old_trans);
+
+	CBrush yellowBrush(RGB(255, 255, 0));
+	CBrush* pOldBrush = pDC->SelectObject(&yellowBrush);
+
+	// Calculate the center and dimensions of the bounding rectangle
+	float centerX = rect.left + rect.Width() / 2.0f;
+	float centerY = rect.top + rect.Height() / 2.0f;
+	float w = rect.Width() / 2.0f;  // Half width (radius in x-direction)
+	float h = rect.Height() / 2.0f; // Half height (radius in y-direction)
+
+	// Convert the angle from degrees to radians
+	float rad_angle = angle * M_PI / 180.0f;
+
+	// Calculate points for the start and end of the arc
+	CPoint p1(
+		static_cast<int>(centerX + w * cos(rad_angle)),  // x = cx + r * cos(angle)
+		static_cast<int>(centerY - h * sin(rad_angle))  // y = cy - r * sin(angle)
+	);
+	CPoint p2(
+		static_cast<int>(centerX + w * cos(-rad_angle)), // x = cx + r * cos(-angle)
+		static_cast<int>(centerY - h * sin(-rad_angle)) // y = cy - r * sin(-angle)
+	);
+
+	// Draw the Pac-Man using the Pie function
+	pDC->Pie(rect, p1, p2);
+
+	// Restore the previous brush and transformation
+	pDC->SelectObject(pOldBrush);
+	pDC->SetWorldTransform(&old_trans);
+
+}
+
 void CRGKolokvijum2015View::OnDraw(CDC* pDC)
 {
 	CRGKolokvijum2015Doc* pDoc = GetDocument();
@@ -111,13 +229,9 @@ void CRGKolokvijum2015View::OnDraw(CDC* pDC)
 	if (!pDoc)
 		return;
 
-	/*CRect rect(200, 200, 250, 300);
-	auto dir = pDC->GetArcDirection();
-	pDC->SetArcDirection(AD_CLOCKWISE);
-	pDC->Arc(rect, { 200, 250 }, { 300, 250 });
-	pDC->SetArcDirection(dir);*/
 
 	CRect clnRect;
+	CRect ghostRect(100, 120, 196, 216);
 	GetClientRect(&clnRect);
 	CDC* memDC = new CDC();
 
@@ -125,6 +239,7 @@ void CRGKolokvijum2015View::OnDraw(CDC* pDC)
 		return;
 
 	CBitmap memMap;
+	CRect packman(0, 0, 100, 100);
 	memMap.CreateCompatibleBitmap(pDC, clnRect.Width(), clnRect.Height());
 
 	memDC->SelectObject(&memMap);
@@ -135,10 +250,11 @@ void CRGKolokvijum2015View::OnDraw(CDC* pDC)
 	auto old_mode = memDC->SetGraphicsMode(GM_ADVANCED);
 	memDC->GetWorldTransform(&old_trans);
 
-	DrawBackground(memDC, clnRect);
+	//DrawBackground(memDC, clnRect);
 
+	DrawGhost(memDC, ghostRect);
 
-
+	DrawPackman(memDC, packman, 30);
 
 	memDC->SetWorldTransform(&old_trans);
 	memDC->SetGraphicsMode(old_mode);

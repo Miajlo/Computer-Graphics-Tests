@@ -25,6 +25,8 @@ public:
 	void Scale(CDC* pDC, float sx, float xy, bool right_mult);
 
 	void DrawBackground(CDC* pDC, CRect rect);
+	void DrawGhost(CDC* pDC, CRect rect);
+	void DrawPackman(CDC* pDC, CRect rect, float angle);
 
 // Overrides
 public:
