@@ -132,7 +132,9 @@ void CRGKolokvijum2023View::draw_img_transparent(CDC* pDC, DImage* img) {
 
 	auto old_bmp = memDC->SelectObject(bit_mp);
 
-	COLORREF color(RGB(232, 162, 0));
+	auto clr = img->GetDIBBits();
+
+	COLORREF color(RGB(clr[2], clr[1], clr[0]));
 		
 	pDC->SetStretchBltMode(HALFTONE);
 
@@ -246,7 +248,7 @@ void CRGKolokvijum2023View::draw_robot(CDC* pDC) {
 	scale(pDC, -1, 1, right_mult);
 	
 
-	//draw_half(pDC);
+	draw_half(pDC);
 
 	scale(pDC, -1, 1, right_mult);
 

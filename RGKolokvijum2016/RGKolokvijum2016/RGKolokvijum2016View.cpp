@@ -263,8 +263,10 @@ void CRGKolokvijum2016View::StickBallMove(bool dir) {
 		ball_rot_angle = stick_angle;
 	}
 
-	if (!stick_move && !dir)
-		ball_y_offset = 0 ;
+	if (!stick_move && !dir) {
+		ball_y_offset = 0;
+		stick_y_offset = 0;
+	}
 
 	if (!stick_move && dir)
 		ball_y_offset -= y_mov;
