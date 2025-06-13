@@ -132,10 +132,18 @@ void CRGKolokvijum2023View::draw_img_transparent(CDC* pDC, DImage* img) {
 
 	auto old_bmp = memDC->SelectObject(bit_mp);
 
-	auto clr = img->GetDIBBits();
+	CDC helperDC;
 
-	COLORREF color(RGB(clr[2], clr[1], clr[0]));
-		
+	helperDC.CreateCompatibleDC(nullptr);
+
+	auto old_bitmap = helperDC.SelectObject(img->GetBitmap());
+
+	COLORREF color = helperDC.GetPixel(0, 0);
+
+	helperDC.DeleteDC();
+
+	delete old_bitmap;
+
 	pDC->SetStretchBltMode(HALFTONE);
 
 	pDC->SetBrushOrg(0, 0);
