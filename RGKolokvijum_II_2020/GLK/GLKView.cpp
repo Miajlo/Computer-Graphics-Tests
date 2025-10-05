@@ -164,16 +164,16 @@ void CGLKView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) {
 
 	switch (nChar) {
 		case VK_LEFT:
-			m_glRenderer.m_cameraAngleY -= rotAngle;
-			break;
-		case VK_RIGHT:
 			m_glRenderer.m_cameraAngleY += rotAngle;
 			break;
+		case VK_RIGHT:
+			m_glRenderer.m_cameraAngleY -= rotAngle;
+			break;
 		case VK_UP:
-			m_glRenderer.m_cameraAngleX += rotAngle;
+			m_glRenderer.m_cameraAngleX -= rotAngle;
 			break;
 		case VK_DOWN:
-			m_glRenderer.m_cameraAngleX -= rotAngle;
+			m_glRenderer.m_cameraAngleX += rotAngle;
 			break;
 		case VK_ADD:
 		case 187:
@@ -189,7 +189,7 @@ void CGLKView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) {
 
 	m_glRenderer.m_cameraDistance = Clamp(m_glRenderer.m_cameraDistance, 8, 50);
 
-	m_glRenderer.m_cameraAngleX = Clamp(m_glRenderer.m_cameraAngleX, 1, 89);
+	m_glRenderer.m_cameraAngleX = Clamp(m_glRenderer.m_cameraAngleX, 1, 180);
 
 	Invalidate();
 

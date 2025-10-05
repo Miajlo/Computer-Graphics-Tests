@@ -425,7 +425,7 @@ void CGLRenderer::DrawSpiderBody() {
 
 		glScalef(1.0f, 0.8f,1.0f);
 
-		glTranslatef(chestR + stomachR, 0, 0);
+		glTranslatef(chestR*2, 0, 0);
 
 		DrawSphere(stomachR, sphereSeg, chestBodyU, chestBodyV, chestBodyR);
 
@@ -439,7 +439,7 @@ void CGLRenderer::DrawSpider() {
 	
 			DrawSpiderBody();
 
-			glRotatef(-60, 0, 1, 0);
+			glRotatef(-45, 0, 1, 0);
 
 			DrawLeg();
 
@@ -456,7 +456,7 @@ void CGLRenderer::DrawSpider() {
 
 			DrawLeg();
 
-			glRotatef(120, 0, 1, 0);
+			glRotatef(90, 0, 1, 0);
 
 			DrawLeg(); //r4
 
