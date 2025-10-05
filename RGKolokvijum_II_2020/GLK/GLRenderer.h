@@ -20,6 +20,16 @@ public:
 	void DrawSphere(double r, int nSeg, double texU, double texV, double texR);
 	void DrawCone(double r, double h, int nSeg, double texU, double texV, double texR);
 	void DrawEnvCube(double a);
+
+	void DrawLegSegment(double r, double h, double nSeg);
+	void DrawLeg();
+	void DrawSpiderBody();
+	void DrawSpider();
+
+	//float
+	double m_cameraDistance;  // radius
+	double m_cameraAngleY;    // theta (horizontal rotation)
+	double m_cameraAngleX;
 protected:
 	HGLRC	 m_hrc; //OpenGL Rendering Context 
 
@@ -30,4 +40,7 @@ protected:
 	UINT m_texBack;
 	UINT m_texTop;
 	UINT m_texBot;
+
+	const float STOMACK_R = 5.0f;
+	const float Camera_Radius = 32.0f;
 };

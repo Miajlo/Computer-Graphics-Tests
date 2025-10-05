@@ -30,6 +30,7 @@ BEGIN_MESSAGE_MAP(CGLKView, CView)
 	ON_WM_SIZE()
 	ON_WM_DESTROY()
 	ON_WM_ERASEBKGND()
+	ON_WM_KEYDOWN()
 END_MESSAGE_MAP()
 
 // CGLKView construction/destruction
@@ -154,4 +155,49 @@ void CGLKView::OnInitialUpdate()
 	CDC* pDC = GetDC();
 	m_glRenderer.PrepareScene(pDC);
 	ReleaseDC(pDC);
+}
+
+
+void CGLKView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) {
+	float rotAngle = 5.0f;
+	float zoomStep = 2.0f;
+
+	switch (nChar) {
+		case VK_LEFT:
+			m_glRenderer.m_cameraAngleY -= rotAngle;
+			break;
+		case VK_RIGHT:
+			m_glRenderer.m_cameraAngleY += rotAngle;
+			break;
+		case VK_UP:
+			m_glRenderer.m_cameraAngleX += rotAngle;
+			break;
+		case VK_DOWN:
+			m_glRenderer.m_cameraAngleX -= rotAngle;
+			break;
+		case VK_ADD:
+		case 187:
+			m_glRenderer.m_cameraDistance += zoomStep;
+			break;
+		case VK_SUBTRACT:
+		case 189:
+			m_glRenderer.m_cameraDistance -= zoomStep;
+			break;
+		default:
+			break;
+	}
+
+	m_glRenderer.m_cameraDistance = Clamp(m_glRenderer.m_cameraDistance, 8, 50);
+
+	m_glRenderer.m_cameraAngleX = Clamp(m_glRenderer.m_cameraAngleX, 1, 89);
+
+	Invalidate();
+
+	CView::OnKeyDown(nChar, nRepCnt, nFlags);
+}
+
+double CGLKView::Clamp(double val, double min, double max) {
+	return val > max 
+			   ? max 
+			   : val < min ? min : val;
 }
