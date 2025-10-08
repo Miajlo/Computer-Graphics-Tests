@@ -8,6 +8,8 @@
 #include "corecrt_math_defines.h"
 //#pragma comment(lib, "GL\\glut32.lib")
 
+#define TO_RAD M_PI / 180
+
 CGLRenderer::CGLRenderer(void)
 {
 	m_cameraDistance = 10.0;
@@ -58,7 +60,7 @@ void CGLRenderer::PrepareScene(CDC *pDC)
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 	glFrontFace(GL_CCW);
-
+	glShadeModel(GL_SMOOTH);
 
 	m_texBack = LoadTexture("res\\back.jpg");
 	m_texFront = LoadTexture("res\\front.jpg");
@@ -67,6 +69,21 @@ void CGLRenderer::PrepareScene(CDC *pDC)
 	m_texLeft = LoadTexture("res\\left.jpg");
 	m_texRight = LoadTexture("res\\right.jpg");
 	m_texShipT1 = LoadTexture("res\\ShipT1.png");	
+
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0); // koristimo LIGHT0
+	glEnable(GL_NORMALIZE); // ako skaluješ modele, normalizacija pomaže
+
+	GLfloat ambient[] = { 1, 1, 1, 1.0f };
+	GLfloat diffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	GLfloat specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+	glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
+
+	glEnable(GL_COLOR_MATERIAL);
+	glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
 
 	//---------------------------------
 	wglMakeCurrent(NULL, NULL);
@@ -84,8 +101,8 @@ void CGLRenderer::DrawScene(CDC *pDC)
 
 	double centerX = 0.0, centerY = 0.0, centerZ = 0.0;
 
-	double radY = m_cameraAngleY * M_PI / 180.0;
-	double radX = m_cameraAngleX * M_PI / 180.0;
+	double radY = m_cameraAngleY * TO_RAD;
+	double radX = m_cameraAngleX * TO_RAD;
 
 	double eyeX = centerX + m_cameraDistance * sin(radX) * cos(radY);
 	double eyeY = centerY + m_cameraDistance * cos(radX);
@@ -95,17 +112,36 @@ void CGLRenderer::DrawScene(CDC *pDC)
 		centerX, centerY, centerZ,  // Look at center [0,10,0]
 		0, 1, 0);
 
-	
+	GLfloat lightDir[] = { 0.0f, 0.0f, 1.0f, 0.0f }; 
+	glLightfv(GL_LIGHT0, GL_POSITION, lightDir);
 
-	DrawAxis();
 
+	if (m_LightOn) 
+		glEnable(GL_LIGHT0);
+	else
+		glDisable(GL_LIGHT0);
+
+
+	double translateAmmount = 2.9 / cos(4.75 * TO_RAD);
+
+	glDisable(GL_LIGHTING);
+	{
+		DrawSpaceCube(40);
+		DrawAxis();
+	}
+	glEnable(GL_LIGHTING);
 	glColor3f(1, 1, 1);
 
-	glBindTexture(GL_TEXTURE_2D, m_texShipT1);
+	glPushMatrix();
+	{
+		glTranslatef(-translateAmmount, 0, 0);
+		glBindTexture(GL_TEXTURE_2D, m_texShipT1);
 
-	DrawShip();
+		DrawShip();
 
-	glBindTexture(GL_TEXTURE_2D, 0);
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}
+	glPopMatrix();	
 
 	SwapBuffers(pDC->m_hDC);
 	//---------------------------------
@@ -220,6 +256,8 @@ void CGLRenderer::DrawShip() {
 	// If you want a seam offset, change seamOffset.
 	const float seamOffset = 0.0f;
 
+	glDisable(GL_CULL_FACE);
+
 	glPushMatrix();
 	{
 		glRotatef(4.75, 0, 0, 1);
@@ -241,8 +279,6 @@ void CGLRenderer::DrawShip() {
 	}
 	glPopMatrix();
 
-	glFrontFace(GL_CW);
-
 	glPushMatrix();
 	{
 		glScalef(1.0f, 1.0f, -1.0f);  // Mirror in Z
@@ -260,7 +296,87 @@ void CGLRenderer::DrawShip() {
 		glRotatef(103, 1, 0, 0);
 		DrawTriangle(d1, d2, 3);
 	}
+	glPopMatrix();	
+
+	glEnable(GL_CULL_FACE);
+}
+
+void CGLRenderer::DrawSpaceCube(double a) {
+	double half = a / 2.0f;
+
+	glPushMatrix();
+	{
+		glTranslatef(0, 0, -a);
+		DrawQuad(a, m_texFront);
+	}
 	glPopMatrix();
 
-	glFrontFace(GL_CCW);
+	glPushMatrix();
+	{
+		glRotatef(180, 0, 1, 0);
+		glTranslatef(0, 0, -a);
+
+		DrawQuad(a, m_texBack);
+	}
+	glPopMatrix();
+
+	glPushMatrix();
+	{
+		glRotatef(90, 1, 0, 0);
+		glTranslatef(0, 0, -a);
+
+		DrawQuad(a, m_texTop);
+	}
+	glPopMatrix();
+
+
+	glPushMatrix();
+	{
+		glRotatef(-90, 1, 0, 0);
+		glTranslatef(0, 0, -a);
+
+		DrawQuad(a, m_texBot);
+	}
+	glPopMatrix();
+
+	glPushMatrix();
+	{
+		glRotatef(90, 0, 1, 0);
+		glTranslatef(0, 0, -a);
+
+		DrawQuad(a, m_texLeft);
+	}
+	glPopMatrix();
+
+	glPushMatrix();
+	{
+		glRotatef(-90, 0, 1, 0);
+		glTranslatef(0, 0, -a);
+
+		DrawQuad(a, m_texRight);
+	}
+	glPopMatrix();
+}
+
+
+void CGLRenderer::DrawQuad(double a, UINT textureID) {
+	glBindTexture(GL_TEXTURE_2D, textureID);
+	{
+		glBegin(GL_QUADS);
+		{
+			glTexCoord2f(1, 0);
+			glVertex3f(a, a, 0);
+
+			glTexCoord2f(0, 0);
+			glVertex3f(-a, a, 0);
+
+			glTexCoord2f(0, 1);
+			glVertex3f(-a, -a, 0);
+
+			glTexCoord2f(1, 1);
+			glVertex3f(a, -a, 0);
+		}
+		glEnd();
+	}
+	glBindTexture(GL_TEXTURE_2D, 0); //unbind
 }

@@ -184,6 +184,10 @@ void CGLKView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 	case 189:
 		m_glRenderer.m_cameraDistance -= zoomStep;
 		break;
+	case 'S':
+	case 's':
+		m_glRenderer.m_LightOn = !m_glRenderer.m_LightOn;
+		break;
 	default:
 		break;
 	}

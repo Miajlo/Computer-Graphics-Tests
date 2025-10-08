@@ -17,9 +17,14 @@ public:
 	void DrawTriangle(float d1, float d2, float rep);
 	void DrawShip();
 
+	void DrawSpaceCube(double a);
+
+	void DrawQuad(double a, UINT textureID);
+
 	float m_cameraAngleY;
 	float m_cameraAngleX;
 	float m_cameraDistance;
+	bool m_LightOn = true;
 protected:
 	HGLRC	 m_hrc; //OpenGL Rendering Context 
 
