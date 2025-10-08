@@ -89,8 +89,8 @@ void CGLRenderer::DrawScene(CDC *pDC)
 	double eyeZ = centerZ + m_cameraDistance * sin(radX) * sin(radY);
 
 	gluLookAt(eyeX, eyeY, eyeZ,     // Eye position
-		centerX, centerY, centerZ,  // Look at center [0,10,0]
-		0, 1, 0);
+			  centerX, centerY, centerZ,  // Look at center [0,10,0]
+			  0, 1, 0);
 
 	float frontSize = 100;
 	float sphereR = 1.0f, eyeU = 0.75f, eyeV = 0.75f, eyeR = 0.25f;
