@@ -43,10 +43,14 @@ public:
 	void UpdateCamera();
 	void DrawEarth(double R, int tes);
 	void DrawTextureSphere(double r, int tes, TextureIndeces start);
+	void DrawMoon(double R, int tes);
+	void DrawSpace(double R, int tes);
 
-	float m_cameraDistance = 5;
+	float m_cameraDistance = 80;
 	float m_angleY = 0;
 	float m_angleX = 0;
+	float m_moonRotAngle = 0;
+	bool m_lightEnabled = true;
 protected:
 	HGLRC	 m_hrc; //OpenGL Rendering Context 
 

@@ -6,6 +6,10 @@
 #include "GL\glut.h"
 #include"DImage.h"
 #include<corecrt_math_defines.h>
+#ifndef GL_CLAMP_TO_EDGE
+#define GL_CLAMP_TO_EDGE 0x812F
+#endif
+
 //#pragma comment(lib, "GL\\glut32.lib")
 
 CGLRenderer::CGLRenderer(void) {
@@ -75,6 +79,22 @@ void CGLRenderer::PrepareScene(CDC *pDC)
 		m_texIDArray[i] = LoadTexture(m_texNames[i]);
 	
 
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+
+	float lightPos[] = { 0.0f, 0.0f, 1.0f, 0.0f };  // w=0 = direkciono svetlo
+	float lightAmbient[] = { 0.2f, 0.2f, 0.2f, 1.0f };
+	float lightDiffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };  // bela boja
+	float lightSpecular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+	glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+	glLightfv(GL_LIGHT0, GL_AMBIENT, lightAmbient);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, lightDiffuse);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, lightSpecular);
+
+	glEnable(GL_COLOR_MATERIAL);
+	glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+
 	//---------------------------------
 	wglMakeCurrent(NULL, NULL);
 }
@@ -90,20 +110,45 @@ void CGLRenderer::DrawScene(CDC *pDC)
 	glLoadIdentity();
 
 	//gluLookAt(0, 0, 5, 0, 0, 0, 0, 1, 0);
-	UpdateCamera();
-
+	//UpdateCamera();
+	glDisable(GL_LIGHTING);
 
 	glBegin(GL_TRIANGLES);
 	{
-		glColor3f(1, 0, 0);
-		glVertex3f(0, 1, 0);
-		glVertex3f(-1, -0.5, 0);
-		glVertex3f(1, -0.5, 0);
+		glColor3f(0.01, 0, 0);
+		glVertex3f(0, 0.01, 0);
+		glVertex3f(-0.01, -0.005, 0);
+		glVertex3f(0.01, -0.005, 0);
 	}
 	glEnd();
 	glColor3f(1, 1, 1);
-	double R = 1.3, n = 64;
-	DrawEarth(R, n);
+	double EarthR = 0.6731, n = 64;
+	double moonR = 0.1737f, EarthMoonDistance = 38.4399f;
+	double spaceR = 100;
+
+	DrawSpace(spaceR, n);
+
+	if (m_lightEnabled)
+		glEnable(GL_LIGHTING);
+	else
+		glDisable(GL_LIGHTING);
+	
+	glPushMatrix();
+	{
+		UpdateCamera();
+
+		DrawEarth(EarthR, n);
+
+		glPushMatrix();
+		{
+			glTranslatef(0, 0, -EarthMoonDistance); 
+			glRotatef(m_moonRotAngle, 0, 1, 0);
+			DrawMoon(moonR, n);
+		}
+		glPopMatrix();
+	}
+	glPopMatrix();
+	glPopMatrix();
 
 	SwapBuffers(pDC->m_hDC);
 	//---------------------------------
@@ -120,7 +165,7 @@ void CGLRenderer::Reshape(CDC *pDC, int w, int h)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 
-	gluPerspective(40, aspect, 0.1, 200);
+	gluPerspective(60, aspect, 0.1, 200);
 
 	glMatrixMode(GL_MODELVIEW);
 	//---------------------------------
@@ -152,8 +197,8 @@ UINT CGLRenderer::LoadTexture(char* fileName) {
 
 		glBindTexture(GL_TEXTURE_2D, textureID);
 		{
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
@@ -177,30 +222,36 @@ void CGLRenderer::DrawPatch(double R, int n) {
 			double x1 = -1 + i * step;
 			double x2 = -1 + (i + 1) * step;
 			for (int j = 0; j <= n; ++j) {
-				
 				double y = -1 + j * step;
 
-				double phi1 = (x1 + 1) * M_PI / 3;
-				double theta1 = (y + 1) * M_PI / 3;
+				// PRVO TEME
+				double phi1 = atan(x1);
+				double theta1 = atan(y * cos(phi1));
 
-				double X1 = R * sin(theta1) * cos(phi1);
-				double Y1 = R * sin(theta1) * sin(phi1);
-				double Z1 = R * cos(theta1);
+				double X1 = R * cos(theta1) * sin(phi1);
+				double Y1 = R * sin(theta1);
+				double Z1 = R * cos(theta1) * cos(phi1);
 
+				double s1 = (x1 + 1.0) / 2.0;
+				double t1 = 1.0 - (y + 1.0) / 2.0;  // FLIP po Y!
 
 				glNormal3d(X1 / R, Y1 / R, Z1 / R);
-				glTexCoord2d((x1 + 1.0) / 2.0, (y + 1.0) / 2.0);  // jednostavno mapiranje
+				glTexCoord2d(s1, t1);
 				glVertex3d(X1, Y1, Z1);
 
-				double phi2 = (x2 + 1.0) * M_PI / 3;
-				double theta2 = (y + 1.0) * M_PI / 3.0;
+				// DRUGO TEME
+				double phi2 = atan(x2);
+				double theta2 = atan(y * cos(phi2));
 
-				double X2 = R * sin(theta2) * cos(phi2);
-				double Y2 = R * sin(theta2) * sin(phi2);
-				double Z2 = R * cos(theta2);
+				double X2 = R * cos(theta2) * sin(phi2);
+				double Y2 = R * sin(theta2);
+				double Z2 = R * cos(theta2) * cos(phi2);
+
+				double s2 = (x2 + 1.0) / 2.0;
+				double t2 = 1.0 - (y + 1.0) / 2.0;  // FLIP po Y!
 
 				glNormal3d(X2 / R, Y2 / R, Z2 / R);
-				glTexCoord2d((x2 + 1.0) / 2.0, (y + 1.0) / 2.0);
+				glTexCoord2d(s2, t2);
 				glVertex3d(X2, Y2, Z2);
 			}
 		}
@@ -230,24 +281,33 @@ void CGLRenderer::DrawEarth(double R, int tes) {
 void CGLRenderer::DrawTextureSphere(double r, int tes, TextureIndeces start) {
 	int startIndex = (int)start;
 
+	// 4 patch-a oko ekvatora
 	for (int i = 0; i < 4; ++i) {
 		glPushMatrix();
-		glRotatef(i * 90, 0, 1, 0);  
+		glRotatef(i * 90, 0, 1, 0);
 		DrawTexurePatch(r, tes, m_texIDArray[startIndex + i]);
 		glPopMatrix();
 	}
 
-
-	/*glPushMatrix();
-	glRotatef(90, 1, 0, 0);   
-	glRotatef(180, 0, 0, 1);  
+	// Gornji pol
+	glPushMatrix();
+	glRotatef(-90, 1, 0, 0);
 	DrawTexurePatch(r, tes, m_texIDArray[startIndex + 4]);
 	glPopMatrix();
 
+	// Donji pol
 	glPushMatrix();
-	glRotatef(-90, 1, 0, 0); 
+	glRotatef(90, 1, 0, 0);
 	DrawTexurePatch(r, tes, m_texIDArray[startIndex + 5]);
-	glPopMatrix();*/
+	glPopMatrix();
+}
+
+void CGLRenderer::DrawMoon(double R, int tes) {
+	DrawTextureSphere(R, tes, TextureIndeces::M0);
+}
+
+void CGLRenderer::DrawSpace(double R, int tes) {
+	DrawTextureSphere(R, tes, TextureIndeces::S0);
 }
 
 

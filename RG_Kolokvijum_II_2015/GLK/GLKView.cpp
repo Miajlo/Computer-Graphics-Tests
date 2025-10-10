@@ -162,6 +162,7 @@ void CGLKView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
 	// TODO: Add your message handler code here and/or call default
 	double angleMove = 5;
+	double moveDist = 2;
 
 	switch (nChar) {
 	case VK_LEFT:
@@ -176,7 +177,21 @@ void CGLKView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 	case VK_DOWN:
 		m_glRenderer.m_angleX -= angleMove;
 		break;
-
+	case VK_ADD:
+		m_glRenderer.m_cameraDistance -= moveDist;
+		break;
+	case VK_SUBTRACT:
+		m_glRenderer.m_cameraDistance += moveDist;
+		break;
+	case 'Q':
+		m_glRenderer.m_moonRotAngle -= angleMove;
+		break;
+	case 'W':
+		m_glRenderer.m_moonRotAngle += angleMove;
+		break;
+	case 'S':
+		m_glRenderer.m_lightEnabled = !m_glRenderer.m_lightEnabled;
+		break;
 	default:
 		break;
 	}
