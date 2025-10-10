@@ -5,7 +5,7 @@
 #include "GL\glaux.h"
 #include "GL\glut.h"
 #include"DImage.h"
-#include<corecrt_math_defines.h>
+
 
 #ifndef GL_CLAMP_TO_EDGE
 #define GL_CLAMP_TO_EDGE 0x812F
@@ -15,6 +15,15 @@
 
 CGLRenderer::CGLRenderer(void)
 {
+	m_angleX = 0.1f;
+	m_angleY = 0.0f;
+	m_cameraDistance = 20;
+	m_arm1Angle = 35*TO_RAD;
+	m_arm2Angle = 75*TO_RAD;
+	m_headAngle = 90*TO_RAD;
+	m_angleY = 0;
+	m_angleX = 0;
+	m_cameraDistance = 20;
 }
 
 CGLRenderer::~CGLRenderer(void)
@@ -79,7 +88,8 @@ void CGLRenderer::DrawScene(CDC *pDC)
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 
-	gluLookAt(0, 20, 50, 0, 30, 0, 0, 1, 0);
+	UpdateCamera();
+	
 
 	double cubeSide = 40;
 
@@ -90,7 +100,7 @@ void CGLRenderer::DrawScene(CDC *pDC)
 
 	glPushMatrix();
 	{
-		glTranslatef(0, cubeSide, 0);
+		glTranslatef(0, cubeSide*2-0.1, 0);
 		DrawEnvCube(80);
 	}
 	glPopMatrix();
@@ -384,7 +394,7 @@ void CGLRenderer::DrawLampHead() {
 		DrawCylinder(r1, r1, h2, nSeg, 0, false);
 
 		glRotatef(90, 1, 0, 0);
-		glTranslatef(-2*r1, -2*h1, 0);
+		glTranslatef(-2*r1, -2*h1, -h1);
 		DrawCylinder(r2, r2, h3, nSeg, 1, true);
 
 		glTranslatef(0, h3, 0);
@@ -398,27 +408,32 @@ void CGLRenderer::DrawLampHead() {
 }
 
 void CGLRenderer::DrawLamp() {
-	glPushMatrix();
-	{
 		glBindTexture(GL_TEXTURE_2D, m_texLamp);
 		{
-			glTranslatef(0, 2, 0);
+			//glTranslatef(0, 2, 0);
 			DrawLampBase();
 
 			glTranslatef(0, 3, 0);
-			glRotatef(m_arm1Angle, 0, 0, 1);
+			glRotatef(m_arm1Angle * TO_DEG, 0, 0, 1);
 			DrawLampArm();
 
-			//glRotatef(m_arm1Angle, 0, 0, 1);
+			//glRotatef(-m_arm1Angle*TO_DEG, 0, 0, 1);
 			glTranslatef(0, 19, 0);
-			glRotatef(-m_arm2Angle - m_arm1Angle, 0, 0, 1);
+			/*glRotatef((-m_arm1Angle) * TO_DEG, 0, 0, 1);*/
+			glRotatef((-m_arm2Angle)*TO_DEG, 0, 0, 1);
 			DrawLampArm();
 
 			glTranslatef(0, 19, 0);
-			glRotatef(-m_arm2Angle - m_headAngle, 0, 0, 1);
+			/*glRotatef(m_arm2Angle* TO_DEG, 0, 0, 1);*/
+			glRotatef((-m_headAngle) * TO_DEG, 0, 0, 1);
 			DrawLampHead();
 		}
 		glBindTexture(GL_TEXTURE_2D, 0);
-	}
-	glPopMatrix();
+}
+
+void CGLRenderer::UpdateCamera() {
+	glTranslatef(0, -26, -m_cameraDistance);
+	//gluLookAt(0, 25, -m_cameraDistance, 0, 0, 0, 0, 1, 0);
+	glRotatef(m_angleX*TO_DEG, 1, 0, 0);
+	glRotatef(m_angleY*TO_DEG, 0, 1, 0);
 }

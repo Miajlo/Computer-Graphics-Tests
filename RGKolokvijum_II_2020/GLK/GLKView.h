@@ -21,6 +21,7 @@ protected:
 
 // Operations
 public:
+	double Clamp(double val, double min, double max);
 
 // Overrides
 public:
@@ -51,7 +52,6 @@ public:
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 	virtual void OnInitialUpdate();
 	afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
-	double Clamp(double val, double min, double max);
 };
 
 #ifndef _DEBUG  // debug version in GLKView.cpp

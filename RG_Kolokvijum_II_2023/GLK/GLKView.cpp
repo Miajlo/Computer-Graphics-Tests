@@ -15,7 +15,7 @@
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
-
+//#include<algorithm>
 
 // CGLKView
 
@@ -30,6 +30,7 @@ BEGIN_MESSAGE_MAP(CGLKView, CView)
 	ON_WM_SIZE()
 	ON_WM_DESTROY()
 	ON_WM_ERASEBKGND()
+	ON_WM_KEYDOWN()
 END_MESSAGE_MAP()
 
 // CGLKView construction/destruction
@@ -53,6 +54,10 @@ BOOL CGLKView::PreCreateWindow(CREATESTRUCT& cs)
 }
 
 // CGLKView drawing
+
+double CGLKView::Clamp(double val, double min, double max) {
+	return val > max ? max : val < min ? min : val;
+}
 
 void CGLKView::OnDraw(CDC* pDC)
 {
@@ -154,4 +159,61 @@ void CGLKView::OnInitialUpdate()
 	CDC* pDC = GetDC();
 	m_glRenderer.PrepareScene(pDC);
 	ReleaseDC(pDC);
+}
+
+
+void CGLKView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
+{
+	// TODO: Add your message handler code here and/or call default
+	double angleStep = 0.1f;
+	double moveStep = 2.0f;
+	switch (nChar) {
+	case VK_LEFT:
+		m_glRenderer.m_angleY += angleStep;
+		break;
+	case VK_RIGHT:
+		m_glRenderer.m_angleY -= angleStep;
+		break;
+	case VK_UP:
+		m_glRenderer.m_angleX+= angleStep;
+		break;
+	case VK_DOWN:
+		m_glRenderer.m_angleX -= angleStep;
+		break;
+	case VK_ADD:
+		m_glRenderer.m_cameraDistance -= moveStep;
+		break;
+	case VK_SUBTRACT:
+		m_glRenderer.m_cameraDistance += moveStep;
+		break;
+	case '1':
+		m_glRenderer.m_arm1Angle += angleStep;
+		break;
+	case '2':
+		m_glRenderer.m_arm1Angle -= angleStep;
+		break;
+	case '3':
+		m_glRenderer.m_arm2Angle += angleStep;
+		break;
+	case '4':
+		m_glRenderer.m_arm2Angle -= angleStep;
+		break;
+	case '5':
+		m_glRenderer.m_headAngle += angleStep;
+		break;
+	case '6':
+		m_glRenderer.m_headAngle -= angleStep;
+		break;
+	default:
+		break;
+	}
+
+	m_glRenderer.m_cameraDistance = Clamp(m_glRenderer.m_cameraDistance, 0, 80);
+	m_glRenderer.m_angleX = Clamp(m_glRenderer.m_angleX, 0.1f, 1.5f);
+	m_glRenderer.m_arm1Angle = Clamp(m_glRenderer.m_arm1Angle, -1.5,1.5);
+	m_glRenderer.m_arm2Angle = Clamp(m_glRenderer.m_arm2Angle, -1.5, 1.5);
+	m_glRenderer.m_headAngle = Clamp(m_glRenderer.m_headAngle, -0.25, 2.5);
+
+	Invalidate();
+	CView::OnKeyDown(nChar, nRepCnt, nFlags);
 }

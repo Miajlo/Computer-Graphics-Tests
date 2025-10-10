@@ -1,6 +1,9 @@
 #pragma once
 #include<unordered_map>
 #include<string>
+#include<corecrt_math_defines.h>
+#define TO_DEG 180 / M_PI
+#define TO_RAD M_PI/180
 
 class CGLRenderer
 {
@@ -31,9 +34,14 @@ public:
 
 	void DrawLamp();
 
-	float m_arm1Angle = 35;
-	float m_arm2Angle = 35;
-	float m_headAngle = 15;
+	void UpdateCamera();
+
+	float m_arm1Angle;
+	float m_arm2Angle;
+	float m_headAngle;
+	float m_angleY;
+	float m_angleX;
+	float m_cameraDistance;
 
 protected:
 	HGLRC	 m_hrc; //OpenGL Rendering Context 

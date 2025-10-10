@@ -21,7 +21,7 @@ protected:
 
 // Operations
 public:
-
+	double Clamp(double val, double min, double max);
 // Overrides
 public:
 	virtual void OnDraw(CDC* pDC);  // overridden to draw this view
@@ -50,6 +50,7 @@ public:
 	afx_msg void OnDestroy();
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 	virtual void OnInitialUpdate();
+	afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
 };
 
 #ifndef _DEBUG  // debug version in GLKView.cpp
