@@ -181,7 +181,7 @@ void CGLRenderer::DrawPatch(double R, int n) {
 				double y = -1 + j * step;
 
 				double phi1 = (x1 + 1) * M_PI / 3;
-				double theta1 = (y + 1) * M_PI / 4;
+				double theta1 = (y + 1) * M_PI / 3;
 
 				double X1 = R * sin(theta1) * cos(phi1);
 				double Y1 = R * sin(theta1) * sin(phi1);
@@ -193,7 +193,7 @@ void CGLRenderer::DrawPatch(double R, int n) {
 				glVertex3d(X1, Y1, Z1);
 
 				double phi2 = (x2 + 1.0) * M_PI / 3;
-				double theta2 = (y + 1.0) * M_PI / 4.0;
+				double theta2 = (y + 1.0) * M_PI / 3.0;
 
 				double X2 = R * sin(theta2) * cos(phi2);
 				double Y2 = R * sin(theta2) * sin(phi2);
@@ -230,24 +230,24 @@ void CGLRenderer::DrawEarth(double R, int tes) {
 void CGLRenderer::DrawTextureSphere(double r, int tes, TextureIndeces start) {
 	int startIndex = (int)start;
 
-	glPushMatrix();
-	{
-		for (int i = 0; i < 3; ++i) {
-			glRotatef(i * 120, 0, 1, 0);
-			DrawTexurePatch(r, tes, startIndex + i);
-		}
+	for (int i = 0; i < 4; ++i) {
+		glPushMatrix();
+		glRotatef(i * 90, 0, 1, 0);  
+		DrawTexurePatch(r, tes, m_texIDArray[startIndex + i]);
+		glPopMatrix();
 	}
+
+
+	/*glPushMatrix();
+	glRotatef(90, 1, 0, 0);   
+	glRotatef(180, 0, 0, 1);  
+	DrawTexurePatch(r, tes, m_texIDArray[startIndex + 4]);
 	glPopMatrix();
 
 	glPushMatrix();
-	{
-		glRotatef(180, 1, 0, 0);
-		for (int i = 0; i < 3; ++i) {
-			glRotatef(i * 120, 0, 1, 0);
-			DrawTexurePatch(r, tes, startIndex + i+3);
-		}
-	}
-	glPopMatrix();
+	glRotatef(-90, 1, 0, 0); 
+	DrawTexurePatch(r, tes, m_texIDArray[startIndex + 5]);
+	glPopMatrix();*/
 }
 
 
