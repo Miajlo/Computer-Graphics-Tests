@@ -1,7 +1,8 @@
 #pragma once
 #include<string>
 #include<vector>
-
+#include<corecrt_math_defines.h>
+#define TO_RAD M_PI/180
 enum class TextureIndeces {
 	TOP = 0,
 	BOTTOM,
@@ -33,6 +34,22 @@ public:
 	void DrawExtrudedPolygon(POINTF* points, POINTF* texCoords, int n, float zh, float r, float g, float b);
 	void DrawBase();
 
+	void DrawBody();
+
+	void DrawArm(double zh);
+
+	void DrawFork();
+
+	void DrawExcavator();
+
+
+	float m_arm1Angle = 45;
+	float m_arm2Angle = -90;
+	float m_cabineAngle = 45;
+	float m_forkAngle = -90;
+	float m_cameraDistance = 20;
+	float m_cameraYAngle = 0;
+	float m_cameraXZAngle = 0;
 protected:
 	HGLRC	 m_hrc; //OpenGL Rendering Context 
 	std::vector<std::string> m_fileNames;

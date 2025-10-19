@@ -5,6 +5,7 @@
 #include "GL\glaux.h"
 #include "GL\glut.h"
 #include"DImage.h"
+
 //#pragma comment(lib, "GL\\glut32.lib")
 
 CGLRenderer::CGLRenderer(void) {
@@ -58,7 +59,7 @@ void CGLRenderer::PrepareScene(CDC *pDC)
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_TEXTURE_2D);
-
+	glDisable(GL_LIGHTING);
 	for (auto i = 0; i < (int)TextureIndeces::LENGTH; ++i)
 		m_textureArray[i] = LoadTexture(const_cast<char*>(m_fileNames[i].c_str()));
 	
@@ -78,12 +79,25 @@ void CGLRenderer::DrawScene(CDC *pDC)
 
 	float envCubeSize = 100;
 
-	gluLookAt(0, -10, -10, 0, 0, 0, 0, 1, 0);
-
-	DrawAxes(10);
 
 	glColor3f(1, 1, 1); //clear color
-	DrawEnvCube(envCubeSize);
+	glPushMatrix();
+	{
+		glRotatef(-m_cameraYAngle, 1, 0, 0);      // Vertical rotation
+		glRotatef(-m_cameraXZAngle, 0, 1, 0);     // Horizontal rotation
+		DrawEnvCube(100);
+	}
+	glPopMatrix();
+
+
+	glTranslatef(0, -5, -m_cameraDistance);
+	glRotatef(-m_cameraYAngle, 1, 0, 0);          // Pitch
+	glRotatef(-m_cameraXZAngle, 0, 1, 0);         // Yaw
+
+	DrawAxes(10);
+	
+	glColor3f(1, 1, 1); //clear color
+	DrawExcavator();
 
 	SwapBuffers(pDC->m_hDC);
 	//---------------------------------
@@ -100,7 +114,7 @@ void CGLRenderer::Reshape(CDC *pDC, int w, int h)
 	glLoadIdentity();
 
 	double aspect = (double)w / (double)h;
-	gluPerspective(55, aspect, 0.1, 200);
+	gluPerspective(55, aspect, 0.1, 2000);
 
 	glMatrixMode(GL_MODELVIEW);
 	//---------------------------------
@@ -166,7 +180,9 @@ UINT CGLRenderer::LoadTexture(char* fileName) {
 }
 
 void CGLRenderer::DrawEnvCube(double a) {
-	float half = a / 2;		
+	float half = a / 2;
+	glDisable(GL_DEPTH_TEST);
+	glDepthMask(GL_FALSE);
 	glEnable(GL_CULL_FACE);
 	{
 		// turn on face culling
@@ -220,6 +236,8 @@ void CGLRenderer::DrawEnvCube(double a) {
 		glPopMatrix();
 	}
 	glDisable(GL_CULL_FACE);
+	glDepthMask(GL_TRUE);
+	glEnable(GL_DEPTH_TEST);
 }
 
 void CGLRenderer::DrawTextureQuad(double a, UINT textureID) {
@@ -288,25 +306,31 @@ void CGLRenderer::DrawExtrudedPolygon(POINTF* points, POINTF* texCoords, int n, 
 	}
 	glPopMatrix();
 
-	glColor3f(r, g, b);
-
-	glBegin(GL_QUADS);
+	
+	glDisable(GL_TEXTURE_2D);
 	{
-		for (auto i = 0; i < n; ++i) {
-			int ni = (i + 1) % n;
+		glBegin(GL_QUADS);
+		{
+		
+			glColor3f(r, g, b);
+			for (auto i = 0; i < n; ++i) {
+				int ni = (i + 1) % n;
 
-			float x0 = points[i].x, y0 = points[i].y;
-			float x1 = points[ni].x, y1 = points[ni].y;
-			glVertex3f(x0, y0, 0.0f);
+				float x0 = points[i].x, y0 = points[i].y;
+				float x1 = points[ni].x, y1 = points[ni].y;
+				glVertex3f(x0, y0, 0.0f);
 
-			glVertex3f(x1, y1, 0.0f);
+				glVertex3f(x1, y1, 0.0f);
 
-			glVertex3f(x1, y1, zh);
+				glVertex3f(x1, y1, zh);
 
-			glVertex3f(x0, y0, zh);
+				glVertex3f(x0, y0, zh);
+			}
+		
 		}
+		glEnd();
 	}
-	glEnd();
+	glEnable(GL_TEXTURE_2D);
 	glColor3f(1.0f, 1.0f, 1.0f);
 }
 
@@ -314,6 +338,149 @@ void CGLRenderer::DrawBase() {
 	//0,13
 
 	POINTF points[8] = {
-
+		{-4, 0.5f},
+		{-3.5, 1},
+		{3.5f, 1},
+		{4, 0.5f},
+		{4, -0.5f},
+		{3.5f, -1},
+		{-3.5f, -1.0f},
+		{-4.0f, -0.5f},
 	};
+
+	double part = 1.0 / 16.0;
+
+	POINTF textureCoords[8] = {
+		{0, 13*part},
+		{1*part, 12 * part},
+		{15*part, 12 * part},
+		{16*part, 13 * part},
+		{16*part, 15 * part},
+		{15 * part, 16 * part},
+		{1 * part, 16 * part},
+		{0, 15 * part},
+	};
+
+	DrawExtrudedPolygon(points, textureCoords, 8, 5, 0, 0, 0);
+}
+
+void CGLRenderer::DrawBody() {
+	//0.96, 0.5, 0.12
+
+	POINTF points[5] = {
+		{-2, 2},
+		{0, 2},
+		{2, 0},
+		{2, -2},
+		{-2, -2},
+	};
+	double part = 1.0 / 16.0;
+	POINTF textureCoords[5] = {
+		{8 * part, 0},
+		{12 * part, 0},
+		{16 * part, 4*part},
+		{16 * part, 8 * part},
+		{8 * part, 8 * part}
+	};
+
+	DrawExtrudedPolygon(points, textureCoords, 5, 4, 0.96, 0.5, 0.12);
+}
+
+void CGLRenderer::DrawArm(double zh) {
+
+
+	POINTF points[6] = {
+		{-4, 0.5f},
+		{-3.5, 1},		
+		{4, 0.5f},
+		{4, -0.5f},
+		{-3.5f, -1},
+		{-4, -0.5}
+	};
+
+	double part = 1.0 / 16.0;
+
+	POINTF textureCoords[6] = {
+		{0, 9 * part},
+		{part, 8 * part},
+		{16 * part, 9 * part},
+		{16 * part, 11 * part},
+		{1 * part, 12 * part},
+		{0, 11 * part}
+	};
+
+	DrawExtrudedPolygon(points, textureCoords, 6, zh, 0.96, 0.5, 0.12);
+}
+
+void CGLRenderer::DrawFork() {
+	POINTF points[6] = {
+		{-2, 1.75f},
+		{-1.75, 2},
+		{1.75, 2},
+		{2, 1.75},
+		{2, -1.5},
+		{-2, -2}
+	};
+
+	double part = 1.0 / 16.0;
+
+	POINTF textureCoords[6] = {
+		{0, part},
+		{part, 0},
+		{8 * part, 0},
+		{8 * part, part},
+		{8 * part, 6*part},
+		{0, 6 * part}
+	};
+
+	DrawExtrudedPolygon(points, textureCoords, 6, 1.0, 0.7, 0.7, 0.7);
+}
+
+void CGLRenderer::DrawExcavator() {
+	glBindTexture(GL_TEXTURE_2D, m_textureArray[(int)TextureIndeces::EXCEVATOR]);
+	{
+		glPushMatrix();
+		{
+			glRotatef(m_cabineAngle, 0, 1, 0);
+			glPushMatrix();
+			{
+				glTranslatef(0, 1, -2.5);
+				DrawBase();
+			}
+			glPopMatrix();
+
+			glPushMatrix();
+			{
+				glTranslatef(0, 4, -2);
+				DrawBody();
+				glTranslatef(0, 0, 2);
+			}
+			glPopMatrix();
+
+
+
+			glPushMatrix();
+			{
+				glTranslatef(2, 3, -0.5);
+				glRotatef(m_arm1Angle, 0, 0, 1);
+				glTranslatef(3.5, 0, 0);
+				DrawArm(1);
+
+				glTranslatef(4, 0, -0.25);
+				glRotatef(m_arm2Angle, 0, 0, 1);
+				glTranslatef(3.5, 0, 0);
+				DrawArm(1.5);
+
+				glTranslatef(3.5, -1, 0);
+				glRotatef(m_forkAngle, 0, 0, 1);
+				glTranslatef(0, 0, 0.25);
+
+				DrawFork();
+			}
+			glPopMatrix();
+		}
+		glPopMatrix();
+		//DrawFork();
+	}
+	glBindTexture(GL_TEXTURE_2D, 0);
 }

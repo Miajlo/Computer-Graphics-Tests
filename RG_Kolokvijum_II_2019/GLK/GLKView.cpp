@@ -30,6 +30,7 @@ BEGIN_MESSAGE_MAP(CGLKView, CView)
 	ON_WM_SIZE()
 	ON_WM_DESTROY()
 	ON_WM_ERASEBKGND()
+	ON_WM_KEYDOWN()
 END_MESSAGE_MAP()
 
 // CGLKView construction/destruction
@@ -53,6 +54,10 @@ BOOL CGLKView::PreCreateWindow(CREATESTRUCT& cs)
 }
 
 // CGLKView drawing
+
+double CGLKView::Clamp(double val, double min, double max) {
+	return val < min ? min : val > max ? max : val;
+}
 
 void CGLKView::OnDraw(CDC* pDC)
 {
@@ -154,4 +159,67 @@ void CGLKView::OnInitialUpdate()
 	CDC* pDC = GetDC();
 	m_glRenderer.PrepareScene(pDC);
 	ReleaseDC(pDC);
+}
+
+
+void CGLKView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
+{
+	// TODO: Add your message handler code here and/or call default
+	float rotStep = 5;
+
+
+	switch (nChar) {
+	case VK_LEFT:
+		m_glRenderer.m_cameraXZAngle += rotStep;
+		break;
+	case VK_RIGHT:
+		m_glRenderer.m_cameraXZAngle -= rotStep;
+		break;
+	case VK_UP:
+		m_glRenderer.m_cameraYAngle += rotStep;
+		break;
+	case VK_DOWN:
+		m_glRenderer.m_cameraYAngle -= rotStep;
+		break;
+	case VK_ADD:
+		m_glRenderer.m_cameraDistance -= rotStep;
+		break;
+	case VK_SUBTRACT:
+		m_glRenderer.m_cameraDistance += rotStep;
+		break;
+	case '1':
+		m_glRenderer.m_cabineAngle += rotStep;
+		break;
+	case '2':
+		m_glRenderer.m_cabineAngle -= rotStep;
+		break;
+	case '3':
+		m_glRenderer.m_arm1Angle+= rotStep;
+		break;
+	case '4':
+		m_glRenderer.m_arm1Angle -= rotStep;
+		break;
+	case '5':
+		m_glRenderer.m_arm2Angle += rotStep;
+		break;
+	case '6':
+		m_glRenderer.m_arm2Angle -= rotStep;
+		break;
+	case '7':
+		m_glRenderer.m_forkAngle += rotStep;
+		break;
+	case '8':
+		m_glRenderer.m_forkAngle -= rotStep;
+		break;
+	default:
+		break;
+	}
+
+	auto distance = m_glRenderer.m_cameraDistance;	
+	auto xzAngle = m_glRenderer.m_cameraYAngle;
+
+	m_glRenderer.m_cameraDistance = Clamp(distance, 0, 200);
+	m_glRenderer.m_cameraYAngle = Clamp(xzAngle, -89, 89);
+	Invalidate();
+	CView::OnKeyDown(nChar, nRepCnt, nFlags);
 }
