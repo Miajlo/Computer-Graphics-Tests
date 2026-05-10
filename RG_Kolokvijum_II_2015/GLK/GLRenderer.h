@@ -45,12 +45,20 @@ public:
 	void DrawTextureSphere(double r, int tes, TextureIndeces start);
 	void DrawMoon(double R, int tes);
 	void DrawSpace(double R, int tes);
+	void DrawSphere(double R, int n);
 
 	float m_cameraDistance = 80;
 	float m_angleY = 0;
 	float m_angleX = 0;
 	float m_moonRotAngle = 0;
+	float m_moonEarthRotAngle = 0;
 	bool m_lightEnabled = true;
+
+	float m_earthRotAngle = 0;
+
+	float m_earthSunDistance = 14957.8f;
+
+	const float m_inclanation = 23.44f;
 protected:
 	HGLRC	 m_hrc; //OpenGL Rendering Context 
 

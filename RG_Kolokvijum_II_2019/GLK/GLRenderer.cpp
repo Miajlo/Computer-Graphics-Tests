@@ -84,7 +84,7 @@ void CGLRenderer::DrawScene(CDC *pDC)
 	glPushMatrix();
 	{
 		glRotatef(-m_cameraYAngle, 1, 0, 0);      // Vertical rotation
-		glRotatef(-m_cameraXZAngle, 0, 1, 0);     // Horizontal rotation
+		glRotatef(-m_cameraXAngle, 0, 1, 0);     // Horizontal rotation
 		DrawEnvCube(100);
 	}
 	glPopMatrix();
@@ -92,7 +92,7 @@ void CGLRenderer::DrawScene(CDC *pDC)
 
 	glTranslatef(0, -5, -m_cameraDistance);
 	glRotatef(-m_cameraYAngle, 1, 0, 0);          // Pitch
-	glRotatef(-m_cameraXZAngle, 0, 1, 0);         // Yaw
+	glRotatef(-m_cameraXAngle, 0, 1, 0);         // Yaw
 
 	DrawAxes(10);
 	
@@ -331,6 +331,7 @@ void CGLRenderer::DrawExtrudedPolygon(POINTF* points, POINTF* texCoords, int n, 
 		glEnd();
 	}
 	glEnable(GL_TEXTURE_2D);
+
 	glColor3f(1.0f, 1.0f, 1.0f);
 }
 

@@ -49,7 +49,7 @@ public:
 	float m_forkAngle = -90;
 	float m_cameraDistance = 20;
 	float m_cameraYAngle = 0;
-	float m_cameraXZAngle = 0;
+	float m_cameraXAngle = 0;
 protected:
 	HGLRC	 m_hrc; //OpenGL Rendering Context 
 	std::vector<std::string> m_fileNames;

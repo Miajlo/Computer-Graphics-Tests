@@ -71,7 +71,8 @@ void CGLRenderer::PrepareScene(CDC *pDC)
 	wglMakeCurrent(pDC->m_hDC, m_hrc);
 	//---------------------------------
 
-	glClearColor(0.7f, 0.85f, 1.0f, 1.0f);
+	//glClearColor(0.7f, 0.85f, 1.0f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_TEXTURE_2D);
 
@@ -82,12 +83,17 @@ void CGLRenderer::PrepareScene(CDC *pDC)
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
 
-	float lightPos[] = { 0.0f, 0.0f, 1.0f, 0.0f };  // w=0 = direkciono svetlo
-	float lightAmbient[] = { 0.2f, 0.2f, 0.2f, 1.0f };
-	float lightDiffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };  // bela boja
-	float lightSpecular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	//float lightPos[] = { 0.0f, 0.0f, 1.0f, 0.0f };  // w=0 = direkciono svetlo
+	//float lightAmbient[] = { 0.05f, 0.05f, 0.05f, 1.0f };  // nearly black ambient = space-like
+	//float lightDiffuse[] = { 2.0f,  1.9f,  1.4f,  1.0f };  // over-bright warm white (OpenGL allows >1)
+	//float lightSpecular[] = { 2.0f,  2.0f,  1.5f,  1.0f };
+	
+	// PrepareScene
+	float lightAmbient[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	float lightDiffuse[] = { 0.25f, 0.25f, 0.25f, 1.0f };
+	float lightSpecular[] = { 0.3f,  0.3f,  0.4f, 1.0f };  // nearly off
 
-	glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+	//glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 	glLightfv(GL_LIGHT0, GL_AMBIENT, lightAmbient);
 	glLightfv(GL_LIGHT0, GL_DIFFUSE, lightDiffuse);
 	glLightfv(GL_LIGHT0, GL_SPECULAR, lightSpecular);
@@ -122,30 +128,76 @@ void CGLRenderer::DrawScene(CDC *pDC)
 	}
 	glEnd();
 	glColor3f(1, 1, 1);
-	double EarthR = 0.6731, n = 64;
-	double moonR = 0.1737f, EarthMoonDistance = 38.4399f;
-	double spaceR = 100;
-
-	DrawSpace(spaceR, n);
+	double EarthR = 0.6731, n = 64, sunR = 69.57f;
+	double moonR = 0.1737f, EarthMoonDistance = 10/*38.4399f*/, earthSunDistance = m_earthSunDistance;
+	double spaceR = earthSunDistance * 2;
+	
+	//DrawSpace(spaceR, n);
 
 	if (m_lightEnabled)
 		glEnable(GL_LIGHTING);
 	else
 		glDisable(GL_LIGHTING);
 	
+	float lightPos[] = { 0.0f, 0.0f, -(float)earthSunDistance, 1.0f };
 	glPushMatrix();
 	{
+		glDisable(GL_COLOR_MATERIAL);
 		UpdateCamera();
 
-		DrawEarth(EarthR, n);
+
+		glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+
+
+		glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.0f);
+		glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 0.0f);
+		glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 1.0f);
 
 		glPushMatrix();
 		{
+			glRotatef(m_inclanation, 1, 0, 0);
+			glRotatef(m_earthRotAngle, 0, 1, 0);
+
+
+			float matAmbient[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+			float matDiffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+			float matSpecular[] = { 0.2f, 0.2f, 0.3f, 1.0f };  // very subtle
+			float matShininess = 128.0f;  // very tight/small highlight
+			float matEmission[] = { 0.0f, 0.0f, 0.0f, 1.0f };  // kill emission entirely
+
+			glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, matAmbient);
+			glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, matDiffuse);
+			glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, matSpecular);
+			glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, matEmission);
+			glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, matShininess);
+
+			glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_ADD);
+
+			DrawEarth(EarthR, n);
+
+			glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+		}
+		glPopMatrix();
+
+		float noEmission[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+		glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, noEmission);
+		glMaterialf(GL_FRONT, GL_SHININESS, 0.0f);
+
+		glPushMatrix();
+		{
+			glRotatef(m_moonEarthRotAngle, 0, 1, 0);
 			glTranslatef(0, 0, -EarthMoonDistance); 
 			glRotatef(m_moonRotAngle, 0, 1, 0);
 			DrawMoon(moonR, n);
 		}
 		glPopMatrix();
+
+		glTranslatef(0, 0, -earthSunDistance);
+
+		glColor3f(1.0f, 1.0f, 0); // sun color
+		DrawSphere(sunR, n);
+
+		glEnable(GL_COLOR_MATERIAL);
 	}
 	glPopMatrix();
 	glPopMatrix();
@@ -165,7 +217,7 @@ void CGLRenderer::Reshape(CDC *pDC, int w, int h)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 
-	gluPerspective(60, aspect, 0.1, 200);
+	gluPerspective(60, aspect, 0.1, 50000);
 
 	glMatrixMode(GL_MODELVIEW);
 	//---------------------------------
@@ -257,6 +309,43 @@ void CGLRenderer::DrawPatch(double R, int n) {
 		}
 		glEnd();
 	}
+}
+
+void CGLRenderer::DrawSphere(double R, int n) {
+	double phiStep = M_PI / n;
+	double thetaStep = 2.0 * M_PI / n;
+
+	
+
+	glDisable(GL_LIGHTING);
+
+	for (int i = 0; i < n; ++i) {
+		double phi1 = i * phiStep;
+		double phi2 = (i + 1) * phiStep;
+
+		glBegin(GL_TRIANGLE_STRIP);
+		{
+			for (int j = 0; j <= n; ++j) {
+				double theta = j * thetaStep;
+
+				double x1 = sin(phi1) * cos(theta);
+				double y1 = cos(phi1);
+				double z1 = sin(phi1) * sin(theta);
+				glNormal3d(x1, y1, z1);
+				glVertex3d(R * x1, R * y1, R * z1);
+
+				double x2 = sin(phi2) * cos(theta);
+				double y2 = cos(phi2);
+				double z2 = sin(phi2) * sin(theta);
+				glNormal3d(x2, y2, z2);
+				glVertex3d(R * x2, R * y2, R * z2);
+			}
+		}
+		glEnd();
+	}
+
+	if (m_lightEnabled)
+		glEnable(GL_LIGHTING);
 }
 
 void CGLRenderer::DrawTexurePatch(double R, int n, UINT textureID) {

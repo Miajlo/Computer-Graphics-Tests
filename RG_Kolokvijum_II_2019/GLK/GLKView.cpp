@@ -170,10 +170,10 @@ void CGLKView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 
 	switch (nChar) {
 	case VK_LEFT:
-		m_glRenderer.m_cameraXZAngle += rotStep;
+		m_glRenderer.m_cameraXAngle += rotStep;
 		break;
 	case VK_RIGHT:
-		m_glRenderer.m_cameraXZAngle -= rotStep;
+		m_glRenderer.m_cameraXAngle -= rotStep;
 		break;
 	case VK_UP:
 		m_glRenderer.m_cameraYAngle += rotStep;

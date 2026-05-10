@@ -189,6 +189,18 @@ void CGLKView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 	case 'W':
 		m_glRenderer.m_moonRotAngle += angleMove;
 		break;
+	case 'E':
+		m_glRenderer.m_moonEarthRotAngle -= angleMove;
+		break;
+	case 'R':
+		m_glRenderer.m_moonEarthRotAngle += angleMove;
+		break;
+	case '1':
+		m_glRenderer.m_earthRotAngle += angleMove;
+		break;
+	case '2':
+		m_glRenderer.m_earthRotAngle += angleMove;
+		break;
 	case 'S':
 		m_glRenderer.m_lightEnabled = !m_glRenderer.m_lightEnabled;
 		break;
