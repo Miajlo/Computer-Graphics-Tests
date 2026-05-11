@@ -33,6 +33,10 @@ CGLRenderer::CGLRenderer(void) {
 	m_texNames[(int)TextureIndeces::M3] = "res\\M3.jpg";
 	m_texNames[(int)TextureIndeces::M4] = "res\\M4.jpg";
 	m_texNames[(int)TextureIndeces::M5] = "res\\M5.jpg";
+	m_texNames[(int)TextureIndeces::JUPITER] = "res\\jupiter.jpg";
+	m_texNames[(int)TextureIndeces::SUN] = "res\\sun.jpg";
+	m_texNames[(int)TextureIndeces::MARS] = "res\\mars.jpg";
+	m_texNames[(int)TextureIndeces::SATRUN] = "res\\saturn.jpg";
 }
 
 CGLRenderer::~CGLRenderer(void)
@@ -72,7 +76,7 @@ void CGLRenderer::PrepareScene(CDC *pDC)
 	//---------------------------------
 
 	//glClearColor(0.7f, 0.85f, 1.0f, 1.0f);
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClearColor(0.2f, 0.2f, 0.2f, 0.0f);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_TEXTURE_2D);
 
@@ -90,7 +94,7 @@ void CGLRenderer::PrepareScene(CDC *pDC)
 	
 	// PrepareScene
 	float lightAmbient[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-	float lightDiffuse[] = { 0.25f, 0.25f, 0.25f, 1.0f };
+	float lightDiffuse[] = { 3.0f, 2.8f, 2.4f, 1.0f };  // high to compensate modulate
 	float lightSpecular[] = { 0.3f,  0.3f,  0.4f, 1.0f };  // nearly off
 
 	//glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
@@ -100,6 +104,10 @@ void CGLRenderer::PrepareScene(CDC *pDC)
 
 	glEnable(GL_COLOR_MATERIAL);
 	glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+	glFrontFace(GL_CCW);
 
 	//---------------------------------
 	wglMakeCurrent(NULL, NULL);
@@ -129,7 +137,7 @@ void CGLRenderer::DrawScene(CDC *pDC)
 	glEnd();
 	glColor3f(1, 1, 1);
 	double EarthR = 0.6731, n = 64, sunR = 69.57f;
-	double moonR = 0.1737f, EarthMoonDistance = 10/*38.4399f*/, earthSunDistance = m_earthSunDistance;
+	double moonR = 0.1737f, EarthMoonDistance = 38.4399f, earthSunDistance = m_earthSunDistance;
 	double spaceR = earthSunDistance * 2;
 	
 	//DrawSpace(spaceR, n);
@@ -158,24 +166,7 @@ void CGLRenderer::DrawScene(CDC *pDC)
 			glRotatef(m_inclanation, 1, 0, 0);
 			glRotatef(m_earthRotAngle, 0, 1, 0);
 
-
-			float matAmbient[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-			float matDiffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-			float matSpecular[] = { 0.2f, 0.2f, 0.3f, 1.0f };  // very subtle
-			float matShininess = 128.0f;  // very tight/small highlight
-			float matEmission[] = { 0.0f, 0.0f, 0.0f, 1.0f };  // kill emission entirely
-
-			glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, matAmbient);
-			glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, matDiffuse);
-			glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, matSpecular);
-			glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, matEmission);
-			glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, matShininess);
-
-			glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_ADD);
-
 			DrawEarth(EarthR, n);
-
-			glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 		}
 		glPopMatrix();
 
@@ -183,23 +174,59 @@ void CGLRenderer::DrawScene(CDC *pDC)
 		glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, noEmission);
 		glMaterialf(GL_FRONT, GL_SHININESS, 0.0f);
 
+		glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
+		float noAmbient[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+		glLightfv(GL_LIGHT0, GL_AMBIENT, noAmbient);
+
 		glPushMatrix();
 		{
-			glRotatef(m_moonEarthRotAngle, 0, 1, 0);
-			glTranslatef(0, 0, -EarthMoonDistance); 
+			glRotatef(m_moonEarthRotAngle, 0, 1, 0); //rotate around earth
+			glRotatef(m_moonEclipticInclination, 1, 0, 0); //to make it tilted
+			glTranslatef(0, 0, -EarthMoonDistance);
 			glRotatef(m_moonRotAngle, 0, 1, 0);
+
 			DrawMoon(moonR, n);
+
+			// Restore Earth light settings
+			float earthDiffuseLight[] = { 0.25f, 0.25f, 0.25f, 1.0f };
+			glLightfv(GL_LIGHT0, GL_DIFFUSE, earthDiffuseLight);
+		}
+		glPopMatrix();
+
+		glPushMatrix();
+		{
+			glTranslatef(0, 0, -25);
+			DrawJupiter(m_jupiterR, 2 * n);
+		}
+		glPopMatrix();
+
+
+		glPushMatrix();
+		{
+			glTranslatef(0, 0, 4);
+			glRotatef(m_marsTilt, 1, 0, 0);
+			DrawMars(m_marsR, n);
+		}
+		glPopMatrix();
+
+		glPushMatrix();
+		{
+			glTranslatef(0, 0, -10);
+			glRotatef(m_satrunTilt, 1, 0, 0);
+
+			DrawSatrun(m_satrunR, 4 * n);
 		}
 		glPopMatrix();
 
 		glTranslatef(0, 0, -earthSunDistance);
 
-		glColor3f(1.0f, 1.0f, 0); // sun color
-		DrawSphere(sunR, n);
+		//glColor3f(1.0f, 1.0f, 0); // sun color
+		//DrawSphere(sunR, n);
+
+		DrawSun(sunR, n);
 
 		glEnable(GL_COLOR_MATERIAL);
 	}
-	glPopMatrix();
 	glPopMatrix();
 
 	SwapBuffers(pDC->m_hDC);
@@ -217,7 +244,7 @@ void CGLRenderer::Reshape(CDC *pDC, int w, int h)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 
-	gluPerspective(60, aspect, 0.1, 50000);
+	gluPerspective(45, aspect, 0.1, 50000);
 
 	glMatrixMode(GL_MODELVIEW);
 	//---------------------------------
@@ -364,7 +391,117 @@ void CGLRenderer::UpdateCamera() {
 }
 
 void CGLRenderer::DrawEarth(double R, int tes) {
+	float matAmbient[] = { 0.1f, 0.12f, 0.18f, 1.0f };
+	float matDiffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	float matSpecular[] = { 0.5f, 0.6f, 0.8f, 1.0f };  // blue-white ocean glint	
+	float matShininess = 64.0f;
+	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, matShininess);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, matAmbient);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, matDiffuse);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, matSpecular);
+	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 0.0f);
+
+	float earthLight[] = { 20.0f, 15.0f, 15.0f, 1.0f };
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, earthLight);
+
+	float earthAmbient[] = { 0.2f, 0.2f, 0.25f, 1.0f };
+	glLightfv(GL_LIGHT0, GL_AMBIENT, earthAmbient);
+
+	float matEmission[] = { 0.06f, 0.08f, 0.13f, 1.0f };  // faint blue atmosphere
+	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, matEmission);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, matEmission);
+
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+
 	DrawTextureSphere(R, tes, TextureIndeces::TSC0);
+}
+
+void CGLRenderer::DrawJupiter(double r, int n) {
+	float matAmbient[] = { 0.3f,  0.25f, 0.2f,  1.0f };  // warm self-glow
+	float matDiffuse[] = { 1.0f,  1.0f,  1.0f,  1.0f };
+	float matSpecular[] = { 0.05f, 0.04f, 0.03f, 1.0f };  // gas giant = almost no specular
+	float matEmission[] = { 0.08f, 0.06f, 0.04f, 1.0f };  // faint warm glow in shadow
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, matAmbient);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, matDiffuse);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, matSpecular);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, matEmission);
+	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 0.0f);
+
+	// much brighter diffuse than earth — Jupiter reflects ~52% of light (albedo)
+	float jupiterLight[] = { 60.0f, 55.0f, 45.0f, 1.0f };
+	float jupiterAmbient[] = { 0.4f,  0.35f, 0.3f, 1.0f };
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, jupiterLight);
+	glLightfv(GL_LIGHT0, GL_AMBIENT, jupiterAmbient);
+
+
+	DrawLatLonSphere(r, n, m_texIDArray[(int)TextureIndeces::JUPITER]);
+}
+
+void CGLRenderer::DrawSun(double r, int n)
+{
+
+	glDisable(GL_LIGHTING);  // sun is emissive, not lit
+
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);  // ignore lighting, show pure texture
+
+	DrawLatLonSphere(r, n, m_texIDArray[(int)TextureIndeces::SUN]);
+
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);  // restore for other objects
+	if (m_lightEnabled)
+		glEnable(GL_LIGHTING);
+
+	//DrawLatLonSphere(r, n, m_texIDArray[(int)TextureIndeces::SUN]);
+}
+
+void CGLRenderer::DrawMars(double r, int n)
+{
+
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+	float matAmbient[] = { 0.2f,  0.1f,  0.07f, 1.0f };  // dark reddish-brown
+	float matDiffuse[] = { 1.0f,  1.0f,  1.0f,  1.0f };
+	float matSpecular[] = { 0.02f, 0.01f, 0.01f, 1.0f };  // dusty surface, almost no glint
+	float matEmission[] = { 0.02f, 0.01f, 0.005f,1.0f };  // nearly none
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, matAmbient);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, matDiffuse);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, matSpecular);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, matEmission);
+	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 0.0f);
+
+	// Mars is further from sun, dimmer, and has low albedo (0.25)
+	// slightly warm/reddish light to enhance the rust color
+	float marsLight[] = { 8.0f,  6.0f,  4.5f, 1.0f };
+	float marsAmbient[] = { 0.05f, 0.03f, 0.02f, 1.0f };  // very dark shadow side
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, marsLight);
+	glLightfv(GL_LIGHT0, GL_AMBIENT, marsAmbient);
+
+	DrawLatLonSphere(r, n, m_texIDArray[(int)TextureIndeces::MARS]);
+}
+
+void CGLRenderer::DrawSatrun(double r, int n)
+{
+
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+	float matAmbient[] = { 0.25f, 0.22f, 0.15f, 1.0f };  // warm golden self-glow
+	float matDiffuse[] = { 1.0f,  1.0f,  1.0f,  1.0f };
+	float matSpecular[] = { 0.03f, 0.03f, 0.02f, 1.0f };  // gas giant, no hard surface
+	float matEmission[] = { 0.06f, 0.05f, 0.03f, 1.0f };  // faint golden glow in shadow
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, matAmbient);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, matDiffuse);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, matSpecular);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, matEmission);
+	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 0.0f);
+
+	// Saturn is ~9.5 AU out, so noticeably dimmer than Jupiter
+	// warm golden-white light to bring out the caramel banding
+	float saturnLight[] = { 35.0f, 32.0f, 24.0f, 1.0f };
+	float saturnAmbient[] = { 0.3f,  0.27f, 0.2f,  1.0f };  // gas giant retains warmth in shadow
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, saturnLight);
+	glLightfv(GL_LIGHT0, GL_AMBIENT, saturnAmbient);
+
+	DrawLatLonSphere(r, n, m_texIDArray[(int)TextureIndeces::SATRUN]);
 }
 
 void CGLRenderer::DrawTextureSphere(double r, int tes, TextureIndeces start) {
@@ -392,6 +529,24 @@ void CGLRenderer::DrawTextureSphere(double r, int tes, TextureIndeces start) {
 }
 
 void CGLRenderer::DrawMoon(double R, int tes) {
+	// Moon material - back to modulate, simple diffuse
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+	float moonAmbient[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	float moonDiffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	float moonSpecular[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	float moonEmission[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, moonAmbient);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, moonDiffuse);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, moonSpecular);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, moonEmission);
+	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 0.0f);
+
+	// Moon needs stronger light since we're using MODULATE not ADD
+	float moonDiffuseLight[] = { 2.0f, 2.0f, 2.0f, 1.0f };
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, moonDiffuseLight);
+
+
 	DrawTextureSphere(R, tes, TextureIndeces::M0);
 }
 
@@ -399,4 +554,42 @@ void CGLRenderer::DrawSpace(double R, int tes) {
 	DrawTextureSphere(R, tes, TextureIndeces::S0);
 }
 
+
+void CGLRenderer::DrawLatLonSphere(double R, int n, UINT textureID) {
+	glBindTexture(GL_TEXTURE_2D, textureID);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+
+	double phiStep = M_PI / n;
+
+	for (int i = 0; i < n; ++i) {
+		double phi1 = -M_PI / 2.0 + i * phiStep;
+		double phi2 = -M_PI / 2.0 + (i + 1) * phiStep;
+
+		double v1 = 1.0 - (double)i / n;
+		double v2 = 1.0 - (double)(i + 1) / n;
+
+		glBegin(GL_TRIANGLE_STRIP);
+		for (int j = 0; j <= n; ++j) {
+			double theta = 2.0 * M_PI * j / n;
+			double u = (double)j / n;
+
+			double x1 = cos(phi1) * cos(theta);
+			double y1 = sin(phi1);
+			double z1 = cos(phi1) * sin(theta);
+			glNormal3d(x1, y1, z1);
+			glTexCoord2d(u, v1);
+			glVertex3d(R * x1, R * y1, R * z1);
+
+			double x2 = cos(phi2) * cos(theta);
+			double y2 = sin(phi2);
+			double z2 = cos(phi2) * sin(theta);
+			glNormal3d(x2, y2, z2);
+			glTexCoord2d(u, v2);
+			glVertex3d(R * x2, R * y2, R * z2);
+		}
+		glEnd();
+	}
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
 

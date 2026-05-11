@@ -20,6 +20,10 @@ enum  class TextureIndeces {
 	M3,
 	M4,
 	M5,
+	JUPITER,
+	SUN,
+	MARS,
+	SATRUN,
 	COUNT
 };
 
@@ -46,6 +50,12 @@ public:
 	void DrawMoon(double R, int tes);
 	void DrawSpace(double R, int tes);
 	void DrawSphere(double R, int n);
+	void DrawLatLonSphere(double R, int n, UINT textureID);
+	void DrawJupiter(double r, int n);
+	void DrawSun(double r, int n);
+	void DrawMars(double r, int n);
+	void DrawSatrun(double r, int n);
+
 
 	float m_cameraDistance = 80;
 	float m_angleY = 0;
@@ -56,9 +66,15 @@ public:
 
 	float m_earthRotAngle = 0;
 
-	float m_earthSunDistance = 14957.8f;
+	float m_earthSunDistance = 149.578f;
 
 	const float m_inclanation = 23.44f;
+	const float m_moonEclipticInclination = 5.14f;
+	const float m_jupiterR = 6.9886f;
+	const float m_marsR = 0.33895f;
+	const float m_satrunR = 5.8232f;
+	const float m_marsTilt = 25.19f;
+	const float m_satrunTilt = 26.73f;
 protected:
 	HGLRC	 m_hrc; //OpenGL Rendering Context 
 
